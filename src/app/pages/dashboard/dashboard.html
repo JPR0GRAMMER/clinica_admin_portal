@@ -1,0 +1,103 @@
+<div class="dashboard-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">C</div>
+      <span class="logo-text">ClinicaAdmin</span>
+    </div>
+
+    <nav class="nav-menu">
+      <div class="nav-item active">
+        <span>🏠 Dashboard</span>
+      </div>
+      <div class="nav-item">
+        <span>👥 Pacientes</span>
+      </div>
+      <div class="nav-item">
+        <span>👨‍⚕️ Médicos</span>
+      </div>
+      <div class="nav-item">
+        <span>📅 Agenda</span>
+      </div>
+      <div class="nav-item">
+        <span>⚙️ Configuración</span>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <header>
+      <div class="search-bar">
+        <span>🔍</span>
+        <input type="text" placeholder="Buscar pacientes, citas...">
+      </div>
+
+      <div class="user-profile">
+        <div class="user-info">
+          <span class="user-name">{{ userName() }}</span>
+          <span class="user-role">Administrador</span>
+        </div>
+        <div class="avatar">JP</div>
+      </div>
+    </header>
+
+    <div class="content-body">
+      <section class="welcome-section">
+        <h2>Hola, {{ userName() }} 👋</h2>
+        <p>Aquí tienes el resumen de la clínica para el día de hoy.</p>
+      </section>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card" *ngFor="let stat of stats()">
+          <div class="stat-icon" [style.backgroundColor]="stat.color + '20'" [style.color]="stat.color">
+            <span [ngSwitch]="stat.icon">
+              <span *ngSwitchCase="'users'">👥</span>
+              <span *ngSwitchCase="'calendar'">📅</span>
+              <span *ngSwitchCase="'user-plus'">👤+</span>
+              <span *ngSwitchCase="'clock'">🕒</span>
+            </span>
+          </div>
+          <div class="stat-info">
+            <h3>{{ stat.label }}</h3>
+            <span class="value">{{ stat.value }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Patients Table -->
+      <section class="section-card">
+        <div class="section-header">
+          <h3>Pacientes Recientes</h3>
+          <span class="btn-view-all">Ver todos</span>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Paciente</th>
+              <th>Última Visita</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let patient of recentPatients()">
+              <td>{{ patient.name }}</td>
+              <td>{{ patient.lastVisit }}</td>
+              <td>
+                <span class="status-badge" [ngClass]="'status-' + patient.status.toLowerCase().replace(' ', '-')">
+                  {{ patient.status }}
+                </span>
+              </td>
+              <td>
+                <span style="cursor: pointer; color: #64748b;">•••</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+  </main>
+</div>
