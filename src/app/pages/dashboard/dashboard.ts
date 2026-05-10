@@ -9,19 +9,27 @@ import { CommonModule } from '@angular/common';
   styleUrl: './dashboard.css'
 })
 export class DashboardComponent {
-  userName = signal('Dr. Juan Pérez');
+  userName = signal('Dr. Silva');
   
   stats = signal([
-    { label: 'Pacientes Totales', value: '1,284', icon: 'users', color: '#0066ff' },
-    { label: 'Citas Hoy', value: '12', icon: 'calendar', color: '#10b981' },
-    { label: 'Nuevos Registros', value: '5', icon: 'user-plus', color: '#f59e0b' },
-    { label: 'Consultas Pendientes', value: '3', icon: 'clock', color: '#ef4444' }
+    { label: 'Citas Programadas', value: '42 Hoy', trend: '+12% vs ayer', icon: 'calendar', color: '#004394' },
+    { label: 'Pacientes en Espera', value: '8 Ahora', trend: 'Tiempo prom: 15m', icon: 'users', color: '#f59e0b' },
+    { label: 'Camas Ocupadas', value: '104 / 120', progress: 86, icon: 'bed', color: '#64748b' },
+    { label: 'Urgencias Activas', value: '3', link: 'Ver Detalles', type: 'urgent', color: '#004394' }
   ]);
 
-  recentPatients = signal([
-    { id: 1, name: 'María García', lastVisit: 'Hoy, 09:30', status: 'En espera' },
-    { id: 2, name: 'Carlos Rodríguez', lastVisit: 'Ayer, 15:45', status: 'Completado' },
-    { id: 3, name: 'Ana Martínez', lastVisit: 'Ayer, 11:20', status: 'Completado' },
-    { id: 4, name: 'Luis Hernández', lastVisit: '07 May, 10:00', status: 'Cancelado' }
+  agenda = signal([
+    { time: '08:00 AM', patient: 'Elena Vargas', id: '89452', motive: 'Revisión Post-operatoria', status: 'COMPLETADO' },
+    { time: '09:30 AM', patient: 'Carlos Mendoza', id: '45123', motive: 'Consulta General', status: 'EN CURSO' },
+    { time: '10:15 AM', patient: 'Lucía Romero', id: '12890', motive: 'Resultados Laboratorio', status: 'EN ESPERA' },
+    { time: '11:00 AM', patient: 'Martín Torres', id: '67341', motive: 'Seguimiento Cardiología', status: 'CONFIRMADO' },
+    { time: '12:30 PM', patient: 'Ana Belén', id: '90214', motive: 'Evaluación Pre-quirúrgica', status: 'CONFIRMADO' }
+  ]);
+
+  recentActivity = signal([
+    { title: 'Resultados de laboratorio disponibles', detail: 'Paciente: Lucía Romero. Análisis de sangre completo.', time: 'HACE 10 MIN', type: 'blue' },
+    { title: 'Actualización de historia clínica', detail: 'Dr. Silva añadió notas a la visita de Elena Vargas.', time: 'HACE 45 MIN', type: 'gray' },
+    { title: 'Alerta de Farmacia', detail: 'Stock bajo de Amoxicilina 500mg. Solicitar reposición.', time: 'HACE 2 HORAS', type: 'red' },
+    { title: 'Ingreso Hospitalario', detail: 'Paciente asignado a la cama 304, planta 3.', time: 'AYER 18:30', type: 'gray' }
   ]);
 }
