@@ -1,16 +1,18 @@
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css'
 })
 export class DashboardComponent {
+
   userName = signal('Dr. Silva');
-  
+
   stats = signal([
     { label: 'Citas Programadas', value: '42 Hoy', trend: '+12% vs ayer', icon: 'calendar', color: '#004394' },
     { label: 'Pacientes en Espera', value: '8 Ahora', trend: 'Tiempo prom: 15m', icon: 'users', color: '#f59e0b' },
@@ -32,4 +34,5 @@ export class DashboardComponent {
     { title: 'Alerta de Farmacia', detail: 'Stock bajo de Amoxicilina 500mg. Solicitar reposición.', time: 'HACE 2 HORAS', type: 'red' },
     { title: 'Ingreso Hospitalario', detail: 'Paciente asignado a la cama 304, planta 3.', time: 'AYER 18:30', type: 'gray' }
   ]);
+
 }

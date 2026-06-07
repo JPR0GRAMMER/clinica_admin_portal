@@ -1,0 +1,134 @@
+<div class="container">
+
+    <div class="titulo">
+
+        <h1>Gestión de Pacientes</h1>
+
+        <p>Administración de pacientes registrados en la clínica.</p>
+
+    </div>
+
+    <div class="cards">
+
+        <div class="card">
+
+            <h2>350</h2>
+
+            <span>Total Pacientes</span>
+
+        </div>
+
+        <div class="card">
+
+            <h2>320</h2>
+
+            <span>Activos</span>
+
+        </div>
+
+        <div class="card">
+
+            <h2>30</h2>
+
+            <span>Inactivos</span>
+
+        </div>
+
+        <div class="card">
+
+            <h2>15</h2>
+
+            <span>Nuevos Hoy</span>
+
+        </div>
+
+    </div>
+
+    <div class="barra">
+
+        <input
+            type="text"
+            placeholder="🔍 Buscar paciente..."
+        >
+
+        <button>
+
+            + Nuevo Paciente
+
+        </button>
+
+    </div>
+
+    <table>
+
+        <thead>
+
+        <tr>
+
+            <th>DNI</th>
+
+            <th>Nombre</th>
+
+            <th>Edad</th>
+
+            <th>Teléfono</th>
+
+            <th>Estado</th>
+
+            <th>Acciones</th>
+
+        </tr>
+
+        </thead>
+
+        <tbody>
+
+        @for (paciente of pacientes(); track paciente.dni) {
+
+            <tr>
+
+                <td>{{paciente.dni}}</td>
+
+                <td>{{paciente.nombre}}</td>
+
+                <td>{{paciente.edad}}</td>
+
+                <td>{{paciente.telefono}}</td>
+
+                <td>
+
+                    <span
+                      class="estado"
+                      [class.inactivo]="paciente.estado==='Inactivo'">
+
+                        {{paciente.estado}}
+
+                    </span>
+
+                </td>
+
+                <td>
+
+                    <button class="editar">
+
+                        ✏️
+
+                    </button>
+
+                    <button class="eliminar">
+
+                        🗑️
+
+                    </button>
+
+                </td>
+
+            </tr>
+
+        }
+
+        </tbody>
+
+    </table>
+
+</div>

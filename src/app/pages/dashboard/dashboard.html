@@ -30,28 +30,33 @@
           <line x1="8" y1="2" x2="8" y2="6"></line>
           <line x1="3" y1="10" x2="21" y2="10"></line>
         </svg>
-        <span>Citas</span>
+        <a routerLink="/citas">Citas</a>
       </div>
       <div class="nav-item">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
         </svg>
-        <span>Consulta Médica</span>
+        <a routerLink="/pacientes">Pacientes</a>
       </div>
       <div class="nav-item">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 13h18M5 17h14M2 21h20M12 5l-8 8h16l-8-8z"></path>
           <path d="M7 21v-4m10 4v-4"></path>
         </svg>
-        <span>Hospitalización</span>
+        <a routerLink="/doctores">Doctores</a>
       </div>
       <div class="nav-item">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"></circle>
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
         </svg>
-        <span>Administración</span>
+        <a routerLink="/usuarios">Usuarios</a>
       </div>
+      <div class="nav-item">
+       <a routerLink="/historial-clinico">
+            Historial Clínico
+      </a>
+</div>
     </nav>
 
     <div class="sidebar-footer">
@@ -124,88 +129,110 @@
         </div>
       </div>
 
-      <div class="main-grid">
-        <!-- Left Column: Agenda -->
-        <div class="grid-left">
-          <section class="section-card agenda-section">
-            <div class="section-header">
-              <h3>Agenda del Día</h3>
-              <div class="tab-control">
-                <button class="active">Hoy</button>
-                <button>Mañana</button>
-              </div>
-            </div>
+      <div class="actions-grid">
 
-            <table class="agenda-table">
-              <thead>
-                <tr>
-                  <th>Hora</th>
-                  <th>Paciente</th>
-                  <th>Motivo</th>
-                  <th>Estado</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let item of agenda()">
-                  <td class="time-cell">{{ item.time }}</td>
-                  <td class="patient-cell">
-                    <strong>{{ item.patient }}</strong>
-                    <span class="patient-id">ID: {{ item.id }}</span>
-                  </td>
-                  <td>{{ item.motive }}</td>
-                  <td>
-                    <span class="status-badge" [ngClass]="'status-' + item.status.toLowerCase().replace(' ', '-')">
-                      {{ item.status }}
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <div class="card-footer">
-              <a href="#">Ver agenda completa</a>
-            </div>
-          </section>
-        </div>
+          <button class="action-btn">
+          <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <line x1="19" y1="8" x2="19" y2="14"></line>
+        <line x1="22" y1="11" x2="16" y2="11"></line>
+        </svg>
+      <span>Nuevo Paciente</span>
+      </button>
 
-        <!-- Right Column: Quick Actions & Activity -->
-        <div class="grid-right">
-          <section class="section-card actions-section">
-            <h3>Acciones Rápidas</h3>
-            <div class="actions-grid">
-              <button class="action-btn">
-                <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="22" y1="11" x2="16" y2="11"></line></svg>
-                <span>Nuevo Paciente</span>
-              </button>
-              <button class="action-btn">
-                <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                <span>Crear Receta</span>
-              </button>
-              <button class="action-btn">
-                <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 2v7.51"></path><path d="M19 9V6a2 2 0 0 0-2-2H9.99"></path><path d="M15 2v5"></path><path d="M11 17a4 4 0 0 1-4-4V5h12v8a4 4 0 0 1-4 4"></path><path d="M13 17v4"></path><path d="M9 21h8"></path></svg>
-                <span>Laboratorio</span>
-              </button>
-              <button class="action-btn">
-                <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
-                <span>Facturación</span>
-              </button>
-            </div>
-          </section>
+  <button class="action-btn">
+    <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+      <polyline points="14 2 14 8 20 8"></polyline>
+      <line x1="16" y1="13" x2="8" y2="13"></line>
+      <line x1="16" y1="17" x2="8" y2="17"></line>
+      <polyline points="10 9 9 9 8 9"></polyline>
+    </svg>
+    <span>Crear Receta</span>
+  </button>
 
-          <section class="section-card activity-section">
-            <h3>Actividad Reciente</h3>
-            <div class="activity-timeline">
-              <div class="activity-item" *ngFor="let act of recentActivity()">
-                <div class="activity-dot" [ngClass]="'dot-' + act.type"></div>
-                <div class="activity-content">
-                  <h4>{{ act.title }}</h4>
-                  <p>{{ act.detail }}</p>
-                  <span class="activity-time">{{ act.time }}</span>
-                </div>
-              </div>
-            </div>
-          </section>
-        </div>
-      </div>
+  <button class="action-btn">
+    <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M10 2v7.51"></path>
+      <path d="M19 9V6a2 2 0 0 0-2-2H9.99"></path>
+      <path d="M15 2v5"></path>
+      <path d="M11 17a4 4 0 0 1-4-4V5h12v8a4 4 0 0 1-4 4"></path>
+      <path d="M13 17v4"></path>
+      <path d="M9 21h8"></path>
+    </svg>
+    <span>Laboratorio</span>
+  </button>
+
+  <button class="action-btn">
+    <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+      <line x1="2" y1="10" x2="22" y2="10"></line>
+    </svg>
+    <span>Facturación</span>
+  </button>
+
+  <button
+    class="action-btn"
+    routerLink="/historial-clinico">
+
+    <svg
+      class="action-icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2">
+
+      <rect x="4" y="3" width="16" height="18" rx="2"></rect>
+      <line x1="8" y1="8" x2="16" y2="8"></line>
+      <line x1="8" y1="12" x2="16" y2="12"></line>
+      <line x1="8" y1="16" x2="13" y2="16"></line>
+
+    </svg>
+
+    <span>Historial Clínico</span>
+
+  </button>
+</div>
+      <section class="section-card historial-section">
+
+  <h3>Historial Clínico Reciente</h3>
+
+  <table class="historial-table">
+
+    <thead>
+      <tr>
+        <th>Paciente</th>
+        <th>Diagnóstico</th>
+        <th>Fecha</th>
+      </tr>
+    </thead>
+
+    <tbody>
+
+      <tr>
+        <td>María López</td>
+        <td>Hipertensión</td>
+        <td>01/06/2026</td>
+      </tr>
+
+      <tr>
+        <td>Carlos Ruiz</td>
+        <td>Gripe</td>
+        <td>05/06/2026</td>
+      </tr>
+
+      <tr>
+        <td>Ana Torres</td>
+        <td>Diabetes Tipo II</td>
+        <td>10/06/2026</td>
+      </tr>
+
+    </tbody>
+
+  </table>
+
+</section>
     </div>
   </main>
 </div>
