@@ -41,7 +41,7 @@ export class LoginComponent {
       this.authService.login({ correo: email!, contrasena: password! }).subscribe({
         next: () => {
           this.isLoading.set(false);
-          this.router.navigate(['/']); // Dirige al default que es usuarios
+          this.router.navigate(['/usuarios']); // Dirige al dashboard principal
         },
         error: (err) => {
           this.isLoading.set(false);
