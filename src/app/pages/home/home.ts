@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';  // ← AGREGAR ESTA LÍNEA
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterLink],  // ← AGREGAR RouterLink AQUÍ
+  imports: [CommonModule, RouterLink],  // ← aAGREGAR RouterLink AQUÍ
   templateUrl: './home.html',
   styleUrls: ['./home.css'],
   encapsulation: ViewEncapsulation.None
