@@ -1,7 +1,8 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -19,8 +20,16 @@ export class LoginComponent {
 
   isLoading = signal(false);
   errorMessage = signal('');
+  showPassword = signal(false);
 
-  constructor(private router: Router) {}
+  togglePasswordVisibility() {
+    this.showPassword.set(!this.showPassword());
+  }
+
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
   onSubmit() {
     if (this.loginForm.valid) {
@@ -29,17 +38,22 @@ export class LoginComponent {
       this.isLoading.set(true);
       this.errorMessage.set('');
       
-      // Simulate API call with hardcoded credentials
-      setTimeout(() => {
-        this.isLoading.set(false);
-        
-        if (email === 'admin@clinica.com' && password === 'admin123') {
-          console.log('Login successful');
-          this.router.navigate(['/dashboard']);
-        } else {
-          this.errorMessage.set('Credenciales incorrectas. Intenta con admin@clinica.com / admin123');
+      this.authService.login({ correo: email!, contrasena: password! }).subscribe({
+        next: () => {
+          this.isLoading.set(false);
+          this.router.navigate(['/']); // Dirige al default que es usuarios
+        },
+        error: (err) => {
+          this.isLoading.set(false);
+          if (err.name === 'TimeoutError') {
+            this.errorMessage.set('El servidor tardó demasiado en responder. Revisa tu conexión.');
+          } else if (err.status === 401 || err.status === 403) {
+            this.errorMessage.set('Credenciales incorrectas. Verifica tu correo y contraseña.');
+          } else {
+            this.errorMessage.set('Ocurrió un error al intentar iniciar sesión. Inténtalo más tarde.');
+          }
         }
-      }, 1200);
+      });
     } else {
       this.loginForm.markAllAsTouched();
     }

@@ -1,49 +1,21 @@
 import { Routes } from '@angular/router';
-
+import { MainLayout } from './layout/main-layout/main-layout';
+import { Usuarios } from './pages/usuarios/usuarios';
 import { HomeComponent } from './pages/home/home';
 import { LoginComponent } from './pages/login/login';
-import { DashboardComponent } from './pages/dashboard/dashboard';
-import { Pacientes } from './pages/pacientes/pacientes';
-import { Doctores } from './pages/doctores/doctores';
-import { Usuarios } from './pages/usuarios/usuarios';
-import { Citas } from './pages/citas/citas';
-import { HistorialClinico } from './pages/historial-clinico/historial-clinico';
+import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
     path: '',
-    component: HomeComponent        // ← landing en /
+    component: MainLayout,
+    canActivate: [authGuard],
+    children: [
+      { path: 'usuarios', component: Usuarios },
+      { path: '', redirectTo: 'usuarios', pathMatch: 'full' }
+    ]
   },
-  {
-    path: 'login',
-    component: LoginComponent
-  },
-  {
-    path: 'dashboard',
-    component: DashboardComponent
-  },
-  {
-    path: 'pacientes',
-    component: Pacientes
-  },
-  {
-    path: 'doctores',
-    component: Doctores
-  },
-  {
-    path: 'usuarios',
-    component: Usuarios
-  },
-  {
-    path: 'citas',
-    component: Citas
-  },
-  {
-    path: 'historial-clinico',
-    component: HistorialClinico
-  },
-  {
-    path: '**',
-    redirectTo: ''
-  }
+  { path: 'login', component: LoginComponent },
+  { path: 'home', component: HomeComponent },
+  { path: '**', redirectTo: '' }
 ];

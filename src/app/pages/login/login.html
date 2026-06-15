@@ -1,91 +1,73 @@
 <div class="login-container">
   <div class="login-left">
-    <div class="form-wrapper">
+    <div class="hero-text">
+      <h1>SISTEMA DE GESTIÓN DOCUMENTAL</h1>
+      <p>Transformando la Gestión Documental hacia una Administración Segura e Inteligente.</p>
+    </div>
+  </div>
+  <div class="login-right">
+    <div class="form-wrapper glass-card">
       <div class="header">
         <div class="logo">
           <svg class="logo-icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 6H16V5C16 3.34 14.66 2 13 2H11C9.34 2 8 3.34 8 5V6H5C3.9 6 3 6.9 3 8V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V8C21 6.9 20.1 6 19 6ZM10 5C10 4.45 10.45 4 11 4H13C13.55 4 14 4.45 14 5V6H10V5ZM17 14H13V18H11V14H7V12H11V8H13V12H17V14Z"/>
+            <path d="M12 2L2 7L12 12L22 7L12 2ZM2 17L12 22L22 17V19.5L12 24L2 19.5V17ZM2 12L12 17L22 12V14.5L12 19.5L2 14.5V12Z"/>
           </svg>
-          <span class="logo-text">MedCore Pro</span>
+          <span class="logo-text">Gestión <span style="color: #4a8cf8; font-weight: 300;">Clínica</span></span>
         </div>
-        <h2>Acceso a Gestión Clínica</h2>
-        <p class="subtitle">Por favor, introduzca sus credenciales para continuar.</p>
       </div>
 
-      <div *ngIf="errorMessage()" class="error-message">
-        {{ errorMessage() }}
-      </div>
+      @if (errorMessage()) {
+        <div class="error-message">
+          {{ errorMessage() }}
+        </div>
+      }
 
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
         <div class="form-group">
-          <label for="email">USUARIO / EMAIL</label>
+          <label for="email">Correo electrónico</label>
           <div class="input-wrapper">
-            <svg class="input-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
             <input 
               type="email" 
               id="email" 
               formControlName="email" 
-              placeholder="dr.smith@medcore.pro"
               autocomplete="email"
             >
           </div>
         </div>
 
         <div class="form-group">
-          <label for="password">CONTRASEÑA</label>
+          <label for="password">Contraseña</label>
           <div class="input-wrapper">
-            <svg class="input-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M7 11V7C7 5.67392 7.52678 4.40215 8.46447 3.46447C9.40215 2.52678 10.6739 2 12 2C13.3261 2 14.5979 2.52678 15.5355 3.46447C16.4732 4.40215 17 5.67392 17 7V11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
             <input 
-              type="password" 
+              [type]="showPassword() ? 'text' : 'password'" 
               id="password" 
               formControlName="password" 
-              placeholder="••••••••"
               autocomplete="current-password"
             >
+            <button type="button" class="btn-toggle-password" (click)="togglePasswordVisibility()" title="Mostrar contraseña">
+              @if (!showPassword()) {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+              }
+              @if (showPassword()) {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              }
+            </button>
           </div>
         </div>
 
-        <div class="form-options">
-          <label class="remember-me">
-            <input type="checkbox" formControlName="rememberMe">
-            <span>Recordarme</span>
-          </label>
-          <a href="#" class="forgot-password">¿Olvidó su contraseña?</a>
-        </div>
-
         <button type="submit" class="btn-login" [disabled]="isLoading()">
-          <span *ngIf="isLoading()" class="spinner"></span>
-          <span>{{ isLoading() ? 'Iniciando sesión...' : 'Iniciar Sesión' }}</span>
+          @if (isLoading()) {
+            <span class="spinner"></span>
+          }
+          <span>{{ isLoading() ? 'Iniciando sesión...' : 'Iniciar sesión' }}</span>
         </button>
       </form>
-
-      <div class="footer">
-        <div class="divider"></div>
-        <p>
-          ¿Necesita acceso? 
-          <a href="#" class="support-link">Contactar Soporte <span class="arrow">→</span></a>
-        </p>
-      </div>
-    </div>
-  </div>
-  <div class="login-right">
-    <div class="overlay-card">
-      <span class="tag">EXCELENCIA CLÍNICA</span>
-      <h1>Eficiencia en cada consulta.</h1>
-      <div class="line"></div>
-      <p>
-        MedCore Pro proporciona una plataforma integrada para la gestión de pacientes, 
-        citas y registros médicos, diseñada específicamente para profesionales 
-        de la salud que exigen precisión y seguridad.
-      </p>
     </div>
   </div>
 </div>
-
-

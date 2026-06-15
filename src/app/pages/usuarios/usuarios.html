@@ -1,39 +1,232 @@
-<div class="page-container">
-
-  <h2>Usuarios del Sistema</h2>
-
-  <table>
-
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Usuario</th>
-        <th>Rol</th>
-      </tr>
-    </thead>
-
-    <tbody>
-
-      <tr>
-        <td>1</td>
-        <td>admin</td>
-        <td>Administrador</td>
-      </tr>
-
-      <tr>
-        <td>2</td>
-        <td>doctor01</td>
-        <td>Médico</td>
-      </tr>
-
-      <tr>
-        <td>3</td>
-        <td>recepcion</td>
-        <td>Recepcionista</td>
-      </tr>
-
-    </tbody>
-
-  </table>
-
+<div class="page-header">
+  <div class="breadcrumb">
+    <span>Administrador</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    <span class="current">Usuarios</span>
+  </div>
+  <div class="actions">
+    <button class="btn-primary" (click)="openCreateModal()">Nuevo registro</button>
+  </div>
 </div>
+
+@if (isLoading()) {
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <p>Cargando usuarios...</p>
+  </div>
+} @else if (errorMessage()) {
+  <div class="error-state">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+    <p>{{ errorMessage() }}</p>
+    <button class="btn-primary" (click)="loadUsers()">Reintentar</button>
+  </div>
+} @else {
+  <div class="users-grid">
+    @for (user of users(); track user.id; let i = $index) {
+      <div class="user-card">
+        <button class="more-btn" (click)="toggleDropdown(i, $event)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="1"></circle>
+            <circle cx="12" cy="5" r="1"></circle>
+            <circle cx="12" cy="19" r="1"></circle>
+          </svg>
+        </button>
+
+        @if (activeDropdownIndex() === i) {
+          <div class="dropdown-menu" (click)="$event.stopPropagation()">
+            <button class="dropdown-item" (click)="onAction('editar', user)">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+              Editar
+            </button>
+            @if (user.estado === 1) {
+              <button class="dropdown-item" (click)="onAction('deshabilitar', user)">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                </svg>
+                Deshabilitar
+              </button>
+            } @else {
+              <button class="dropdown-item" (click)="onAction('habilitar', user)">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Habilitar
+              </button>
+            }
+          </div>
+        }
+        <div class="avatar-container" [ngClass]="{ disabled: user.estado === 0 }">
+          <div class="avatar-initials">{{ getInitials(user.nombre, user.apellido) }}</div>
+        </div>
+        <div class="user-info">
+          <h3>{{ user.nombre }} {{ user.apellido }}</h3>
+          <p>{{ user.correo }}</p>
+          @if (user.estado === 0) {
+            <p class="status-disabled">(Deshabilitado)</p>
+          }
+          @if (user.detallesMedico) {
+            <div class="medico-details">
+              {{ user.detallesMedico.especialidadNombre }} | CMP:
+              {{ user.detallesMedico.numeroColegiatura }}
+            </div>
+          }
+        </div>
+        <div class="user-role">
+          {{ user.rolNombre || 'Sin rol' }}
+        </div>
+      </div>
+    }
+  </div>
+}
+
+@if (showCreateModal()) {
+  <div class="modal-overlay" (click)="closeCreateModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ editingUserId() ? 'Editar Usuario' : 'Nuevo Registro de Usuario' }}</h2>
+        <button type="button" class="btn-close" (click)="closeCreateModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      
+      <form [formGroup]="userForm" (ngSubmit)="onSubmitUser()">
+        <div class="modal-body">
+          @if (formError()) {
+            <div class="form-error-banner">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              <span>{{ formError() }}</span>
+            </div>
+          }
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nombre</label>
+              <input type="text" formControlName="nombre" placeholder="Ej. Juan">
+              @if (userForm.get('nombre')?.invalid && (userForm.get('nombre')?.dirty || userForm.get('nombre')?.touched)) {
+                <span class="error-text">El nombre es obligatorio</span>
+              }
+            </div>
+            <div class="form-group">
+              <label>Apellido</label>
+              <input type="text" formControlName="apellido" placeholder="Ej. Pérez">
+              @if (userForm.get('apellido')?.invalid && (userForm.get('apellido')?.dirty || userForm.get('apellido')?.touched)) {
+                <span class="error-text">El apellido es obligatorio</span>
+              }
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Correo Electrónico</label>
+            <input type="email" formControlName="correo" placeholder="correo@ejemplo.com">
+            @if (userForm.get('correo')?.invalid && (userForm.get('correo')?.dirty || userForm.get('correo')?.touched)) {
+              <span class="error-text">Ingresa un correo válido</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <div class="password-header">
+              <label>Contraseña</label>
+              @if (editingUserId()) {
+                <div class="radio-group">
+                  <label class="radio-label">
+                    <input type="radio" name="changePwd" value="si" [checked]="changePasswordMode() === 'si'" (change)="togglePasswordMode('si')">
+                    Sí
+                  </label>
+                  <label class="radio-label">
+                    <input type="radio" name="changePwd" value="no" [checked]="changePasswordMode() === 'no'" (change)="togglePasswordMode('no')">
+                    No
+                  </label>
+                </div>
+              }
+            </div>
+
+            @if (!editingUserId() || changePasswordMode() === 'si') {
+              <input type="password" formControlName="contrasena" placeholder="Mínimo 8 caracteres, 1 mayúscula, 1 número, 1 símbolo">
+              @if (userForm.get('contrasena')?.invalid && (userForm.get('contrasena')?.dirty || userForm.get('contrasena')?.touched)) {
+                @if (userForm.get('contrasena')?.hasError('required')) {
+                  <span class="error-text">La contraseña es obligatoria</span>
+                } @else if (userForm.get('contrasena')?.hasError('minlength')) {
+                  <span class="error-text">Debe tener al menos 8 caracteres</span>
+                } @else if (userForm.get('contrasena')?.hasError('pattern')) {
+                  <span class="error-text">Debe incluir al menos 1 mayúscula, 1 número y 1 símbolo especial</span>
+                }
+              }
+            }
+          </div>
+
+          <div class="form-group">
+            <label>Rol</label>
+            <select formControlName="rolId">
+              <option [ngValue]="null" disabled>Selecciona un rol</option>
+              @for (rol of roles(); track rol.id) {
+                <option [value]="rol.id">{{ rol.nombre }}</option>
+              }
+            </select>
+            @if (userForm.get('rolId')?.invalid && (userForm.get('rolId')?.dirty || userForm.get('rolId')?.touched)) {
+              <span class="error-text">Debes seleccionar un rol</span>
+            }
+          </div>
+
+          @if (isMedicoSelected) {
+            <div class="form-row">
+              <div class="form-group">
+                <label>Número de Colegiatura (CMP)</label>
+                <input type="text" formControlName="numeroColegiatura" placeholder="Ej. 123456">
+                @if (userForm.get('numeroColegiatura')?.invalid && (userForm.get('numeroColegiatura')?.dirty || userForm.get('numeroColegiatura')?.touched)) {
+                  <span class="error-text">El CMP es obligatorio</span>
+                }
+              </div>
+              <div class="form-group">
+                <label>Especialidad</label>
+                <select formControlName="especialidadId">
+                  <option [ngValue]="null" disabled>Selecciona especialidad</option>
+                  @for (esp of especialidades(); track esp.id) {
+                    <option [value]="esp.id">{{ esp.nombre }}</option>
+                  }
+                </select>
+                @if (userForm.get('especialidadId')?.invalid && (userForm.get('especialidadId')?.dirty || userForm.get('especialidadId')?.touched)) {
+                  <span class="error-text">Debes seleccionar una especialidad</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="closeCreateModal()">Cancelar</button>
+          <button type="submit" class="btn-primary flex-center" [disabled]="isSaving()">
+            @if (isSaving()) {
+              <span class="spinner-small"></span>
+            }
+            {{ editingUserId() ? 'Actualizar Usuario' : 'Guardar Usuario' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
