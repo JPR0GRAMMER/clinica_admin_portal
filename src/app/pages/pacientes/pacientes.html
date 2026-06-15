@@ -1,0 +1,267 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="breadcrumb">
+      <span>Administrador</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      <span class="current">Pacientes</span>
+    </div>
+    <div class="actions">
+      <button class="btn-primary" (click)="openCreateModal()">Nuevo registro</button>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="error-banner">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <div class="table-container glass-card">
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="spinner-large"></div>
+        <p>Cargando pacientes...</p>
+      </div>
+    } @else {
+      <table class="modern-table">
+        <thead>
+          <tr>
+            <th>Paciente</th>
+            <th>Documento</th>
+            <th>Contacto</th>
+            <th>Fecha Nac.</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (paciente of pacientes(); track paciente.id; let i = $index) {
+            <tr>
+              <td>
+                <div class="user-info">
+                  <div class="avatar-container" [ngClass]="{ disabled: paciente.estado === 0 }">
+                    <div class="avatar" [ngClass]="'user'">
+                      {{ getInitials(paciente.nombre, paciente.apellido) }}
+                    </div>
+                  </div>
+                  <div class="user-details">
+                    <span class="user-name">{{ paciente.nombre }} {{ paciente.apellido }}</span>
+                    <span class="user-role">ID: {{ paciente.id }}</span>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="doc-text">{{ paciente.documentoIdentidad }}</span>
+              </td>
+              <td>
+                <div class="contact-info">
+                  <span class="email-text">{{ paciente.correo }}</span>
+                  <span class="phone-text">{{ paciente.telefono }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="date-text">{{ paciente.fechaNacimiento }}</span>
+              </td>
+              <td>
+                @if (paciente.estado === 1) {
+                  <span class="status-badge active">Activo</span>
+                } @else {
+                  <span class="status-badge inactive">Deshabilitado</span>
+                }
+              </td>
+              <td class="actions-cell">
+                <div class="dropdown-wrapper">
+                  <button class="more-btn" (click)="toggleDropdown(i, $event)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="1"></circle>
+                      <circle cx="12" cy="5" r="1"></circle>
+                      <circle cx="12" cy="19" r="1"></circle>
+                    </svg>
+                  </button>
+
+                  @if (activeDropdownIndex() === i) {
+                    <div class="dropdown-menu" (click)="$event.stopPropagation()">
+                      <button class="dropdown-item" (click)="onAction('editar', paciente)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                        Editar
+                      </button>
+                      @if (paciente.estado === 1) {
+                        <button class="dropdown-item" (click)="onAction('deshabilitar', paciente)">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                          </svg>
+                          Deshabilitar
+                        </button>
+                      } @else {
+                        <button class="dropdown-item" (click)="onAction('habilitar', paciente)">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                          </svg>
+                          Habilitar
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+
+          @if (pacientes().length === 0) {
+            <tr>
+              <td colspan="5" class="empty-state">
+                <div class="empty-content">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                  <p>No se encontraron pacientes registrados</p>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</div>
+
+@if (showCreateModal()) {
+  <div class="modal-overlay" (click)="closeCreateModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ editingPacienteId() ? 'Editar Paciente' : 'Registrar Nuevo Paciente' }}</h2>
+        <button type="button" class="btn-close" (click)="closeCreateModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      
+      <form [formGroup]="pacienteForm" (ngSubmit)="onSubmitPaciente()">
+        <div class="modal-body">
+          @if (formError()) {
+            <div class="form-error-banner">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              <span>{{ formError() }}</span>
+            </div>
+          }
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Documento de Identidad (DNI)</label>
+              <input type="text" formControlName="documentoIdentidad" placeholder="Ej. 12345678" maxlength="8">
+              @if (pacienteForm.get('documentoIdentidad')?.invalid && (pacienteForm.get('documentoIdentidad')?.dirty || pacienteForm.get('documentoIdentidad')?.touched)) {
+                @if (pacienteForm.get('documentoIdentidad')?.hasError('required')) {
+                  <span class="error-text">El DNI es obligatorio</span>
+                } @else if (pacienteForm.get('documentoIdentidad')?.hasError('minlength') || pacienteForm.get('documentoIdentidad')?.hasError('maxlength')) {
+                  <span class="error-text">Debe tener exactamente 8 caracteres</span>
+                } @else if (pacienteForm.get('documentoIdentidad')?.hasError('pattern')) {
+                  <span class="error-text">Solo se permiten números</span>
+                }
+              }
+            </div>
+            <div class="form-group">
+              <label>Fecha de Nacimiento</label>
+              <input type="date" formControlName="fechaNacimiento">
+              @if (pacienteForm.get('fechaNacimiento')?.invalid && (pacienteForm.get('fechaNacimiento')?.dirty || pacienteForm.get('fechaNacimiento')?.touched)) {
+                @if (pacienteForm.get('fechaNacimiento')?.hasError('required')) {
+                  <span class="error-text">La fecha de nacimiento es obligatoria</span>
+                } @else if (pacienteForm.get('fechaNacimiento')?.hasError('futureDate')) {
+                  <span class="error-text">La fecha no puede estar en el futuro</span>
+                }
+              }
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nombre</label>
+              <input type="text" formControlName="nombre" placeholder="Ej. Juan">
+              @if (pacienteForm.get('nombre')?.invalid && (pacienteForm.get('nombre')?.dirty || pacienteForm.get('nombre')?.touched)) {
+                <span class="error-text">El nombre es obligatorio</span>
+              }
+            </div>
+            <div class="form-group">
+              <label>Apellido</label>
+              <input type="text" formControlName="apellido" placeholder="Ej. Pérez">
+              @if (pacienteForm.get('apellido')?.invalid && (pacienteForm.get('apellido')?.dirty || pacienteForm.get('apellido')?.touched)) {
+                <span class="error-text">El apellido es obligatorio</span>
+              }
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Teléfono</label>
+              <input type="text" formControlName="telefono" placeholder="Ej. 987654321" maxlength="15">
+              @if (pacienteForm.get('telefono')?.invalid && (pacienteForm.get('telefono')?.dirty || pacienteForm.get('telefono')?.touched)) {
+                @if (pacienteForm.get('telefono')?.hasError('required')) {
+                  <span class="error-text">El teléfono es obligatorio</span>
+                } @else if (pacienteForm.get('telefono')?.hasError('maxlength')) {
+                  <span class="error-text">Máximo 15 caracteres permitidos</span>
+                }
+              }
+            </div>
+            <div class="form-group">
+              <label>Correo Electrónico</label>
+              <input type="email" formControlName="correo" placeholder="correo@ejemplo.com">
+              @if (pacienteForm.get('correo')?.invalid && (pacienteForm.get('correo')?.dirty || pacienteForm.get('correo')?.touched)) {
+                <span class="error-text">Ingresa un correo válido</span>
+              }
+            </div>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="closeCreateModal()">Cancelar</button>
+          <button type="submit" class="btn-primary flex-center" [disabled]="isSaving()">
+            @if (isSaving()) {
+              <span class="spinner-small"></span>
+            }
+            Guardar Paciente
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+@if (showConfirmModal()) {
+  <div class="modal-overlay" (click)="closeConfirmModal()">
+    <div class="modal-content confirm-modal" (click)="$event.stopPropagation()">
+      <div class="confirm-icon" [ngClass]="confirmAction() === 'deshabilitar' ? 'danger' : 'success'">
+        @if (confirmAction() === 'deshabilitar') {
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        } @else {
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        }
+      </div>
+      
+      <div class="confirm-content">
+        <h3>{{ confirmAction() === 'deshabilitar' ? 'Deshabilitar Paciente' : 'Habilitar Paciente' }}</h3>
+        <p>¿Estás seguro que deseas {{ confirmAction() }} a <strong>{{ selectedPaciente()?.nombre }} {{ selectedPaciente()?.apellido }}</strong>?</p>
+        @if (confirmAction() === 'deshabilitar') {
+          <p class="confirm-warning">El paciente ya no aparecerá como activo en el sistema.</p>
+        }
+      </div>
+
+      <div class="confirm-actions">
+        <button type="button" class="btn-secondary" (click)="closeConfirmModal()">Cancelar</button>
+        <button type="button" class="btn-primary flex-center" 
+                [ngClass]="confirmAction() === 'deshabilitar' ? 'btn-danger' : 'btn-success'"
+                (click)="executeConfirmAction()" [disabled]="isSaving()">
+          @if (isSaving()) {
+            <span class="spinner-small"></span>
+          }
+          Sí, {{ confirmAction() }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

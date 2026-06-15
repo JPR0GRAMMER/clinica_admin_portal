@@ -4,6 +4,7 @@ import { Usuarios } from './pages/usuarios/usuarios';
 import { HomeComponent } from './pages/home/home';
 import { LoginComponent } from './pages/login/login';
 import { authGuard } from './core/guards/auth.guard';
+import { Pacientes } from './pages/pacientes/pacientes';
 
 export const routes: Routes = [
   {
@@ -12,6 +13,7 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: 'usuarios', component: Usuarios },
+      { path: 'pacientes', component: Pacientes },
       { path: '', redirectTo: 'usuarios', pathMatch: 'full' }
     ]
   },
