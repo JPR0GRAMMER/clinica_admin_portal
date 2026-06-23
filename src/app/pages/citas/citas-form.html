@@ -1,0 +1,118 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <div class="breadcrumb">
+        <span>Gestión Clínica</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        <a routerLink="/citas" class="breadcrumb-link">Citas Médicas</a>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        <span class="current">{{ citaId() ? 'Reprogramar' : 'Agendar' }}</span>
+      </div>
+      <h1 style="margin-top: 8px; font-size: 24px; color: #0f172a;">{{ citaId() ? 'Reprogramar Cita' : 'Agendar Nueva Cita' }}</h1>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading-state">
+      <span class="spinner-large"></span>
+      <p>Cargando datos...</p>
+    </div>
+  } @else {
+    <div class="form-card">
+      <form [formGroup]="citaForm" (ngSubmit)="onSubmit()">
+        @if (formError()) {
+          <div class="error-banner">
+            {{ formError() }}
+          </div>
+        }
+
+        <div class="top-selectors">
+          <div class="form-group">
+            <label>Paciente</label>
+            <select formControlName="pacienteId">
+              <option [ngValue]="null" disabled>Seleccione un paciente</option>
+              @for (paciente of pacientes(); track paciente.id) {
+                <option [ngValue]="paciente.id">{{ paciente.nombre }} {{ paciente.apellido }} (DNI: {{ paciente.documentoIdentidad }})</option>
+              }
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>Especialidad Requerida</label>
+            <select formControlName="especialidadId">
+              <option [ngValue]="null" disabled>Seleccione la especialidad</option>
+              @for (esp of especialidades(); track esp.id) {
+                <option [ngValue]="esp.id">{{ esp.nombre }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Fecha de la Cita</label>
+            <input type="date" formControlName="fechaCita" [min]="minDate()">
+          </div>
+        </div>
+
+        <!-- Cuadritos de Horarios Dinámicos -->
+        @if (citaForm.get('fechaCita')?.value && citaForm.get('especialidadId')?.value) {
+          <div class="horarios-section">
+            <div class="section-header">
+              <h4 class="section-title">Seleccione un horario de la grilla</h4>
+            </div>
+
+            @if (isFetchingHorarios()) {
+              <div class="progress-bar-container">
+                <div class="progress-bar-indeterminate"></div>
+              </div>
+              <p class="loading-text">Buscando disponibilidad de médicos...</p>
+            } @else {
+              @if (doctorBlocks().length > 0) {
+                <div class="doctor-blocks-grid">
+                  @for (doctor of doctorBlocks(); track doctor.medicoId) {
+                    <div class="doctor-card">
+                      <div class="doctor-header">
+                        <div class="avatar">👨‍⚕️</div>
+                        <span class="doctor-name">Dr. {{ doctor.medicoNombre }}</span>
+                      </div>
+                      <div class="time-slots">
+                        @for (bloque of doctor.bloques; track bloque.hora) {
+                          <button type="button" 
+                                  class="time-slot"
+                                  [ngClass]="{'occupied': bloque.ocupado, 'selected': citaForm.get('medicoId')?.value === doctor.medicoId && citaForm.get('horaCita')?.value === bloque.hora}"
+                                  (click)="selectSlot(doctor.medicoId, bloque.hora, bloque.ocupado)"
+                                  [title]="bloque.ocupado ? 'Horario ocupado por otro paciente' : 'Seleccionar este horario'">
+                            {{ bloque.hora }}
+                          </button>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div class="empty-state">
+                  <div class="empty-icon">📅</div>
+                  <p>No hay médicos de esta especialidad disponibles para la fecha seleccionada.</p>
+                </div>
+              }
+            }
+          </div>
+        } @else {
+           <div class="empty-state" style="margin-top: 32px;">
+              <div class="empty-icon">👈</div>
+              <p>Selecciona una especialidad y una fecha para ver los horarios disponibles.</p>
+           </div>
+        }
+
+        <div class="form-actions">
+          <a routerLink="/citas" class="btn-secondary">Cancelar</a>
+          <button type="submit" class="btn-primary flex-center" [disabled]="isSaving() || !citaForm.get('medicoId')?.value || !citaForm.get('horaCita')?.value">
+            @if (isSaving()) {
+              <span class="spinner-small"></span>
+            }
+            {{ citaId() ? 'Guardar Cambios' : 'Agendar Cita' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+</div>

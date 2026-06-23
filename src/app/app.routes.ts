@@ -15,7 +15,10 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: 'usuarios', component: Usuarios },
-      { path: 'pacientes', component: Pacientes }
+      { path: 'pacientes', component: Pacientes },
+      { path: 'citas', loadComponent: () => import('./pages/citas/citas').then(m => m.Citas) },
+      { path: 'citas/agendar', loadComponent: () => import('./pages/citas/citas-form').then(m => m.CitasForm) },
+      { path: 'citas/editar/:id', loadComponent: () => import('./pages/citas/citas-form').then(m => m.CitasForm) }
     ]
   },
   { path: '**', redirectTo: '' }
