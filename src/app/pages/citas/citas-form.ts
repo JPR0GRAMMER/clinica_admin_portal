@@ -8,6 +8,7 @@ import { EspecialidadService, EspecialidadResponse } from '../../core/services/e
 import { HorarioMedicoService, HorarioMedicoResponse } from '../../core/services/horario-medico.service';
 import { MedicoService } from '../../core/services/medico.service';
 import { extractErrorMessage } from '../../core/utils/api-error.utils';
+import { environment } from '../../../environments/environment';
 
 export interface DoctorBlock {
   medicoId: number;
@@ -34,6 +35,7 @@ export class CitasForm implements OnInit {
   isFetchingHorarios = signal<boolean>(false);
   isSaving = signal<boolean>(false);
   formError = signal<string>('');
+  errorTimer: any = null;
   
   // Custom Select State
   isPacienteDropdownOpen = signal<boolean>(false);
@@ -297,15 +299,24 @@ export class CitasForm implements OnInit {
     return `${paciente.nombre} ${paciente.apellido} (DNI: ${paciente.documentoIdentidad})`;
   }
 
+  showError(msg: string) {
+    if (this.errorTimer) clearTimeout(this.errorTimer);
+    this.formError.set(msg);
+    if (msg) {
+      this.errorTimer = setTimeout(() => this.formError.set(''), environment.errorTimeoutMs);
+    }
+  }
+
   onSubmit() {
     if (this.citaForm.invalid) {
       this.citaForm.markAllAsTouched();
-      this.formError.set('Por favor, completa todos los campos y selecciona un horario.');
+      this.showError('Por favor, completa todos los campos y selecciona un horario.');
       return;
     }
 
     this.isSaving.set(true);
     this.formError.set('');
+    if (this.errorTimer) clearTimeout(this.errorTimer);
 
     const formValue = this.citaForm.value;
     const requestData = {
@@ -323,7 +334,7 @@ export class CitasForm implements OnInit {
         },
         error: (err) => {
           this.isSaving.set(false);
-          this.formError.set(extractErrorMessage(err, 'Error al reprogramar la cita.'));
+          this.showError(extractErrorMessage(err, 'Error al reprogramar la cita.'));
         }
       });
     } else {
@@ -334,7 +345,7 @@ export class CitasForm implements OnInit {
         },
         error: (err) => {
           this.isSaving.set(false);
-          this.formError.set(extractErrorMessage(err, 'Error al agendar la cita.'));
+          this.showError(extractErrorMessage(err, 'Error al agendar la cita.'));
         }
       });
     }

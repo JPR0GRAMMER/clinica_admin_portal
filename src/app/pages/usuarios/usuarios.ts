@@ -5,6 +5,7 @@ import { UsuarioService, UsuarioResponse, UsuarioRegistroDto, UsuarioActualizarD
 import { CatalogoService, Rol, Especialidad } from '../../core/services/catalogo.service';
 import { AuthService } from '../../core/services/auth.service';
 import { extractErrorMessage } from '../../core/utils/api-error.utils';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-usuarios',
@@ -23,6 +24,7 @@ export class Usuarios implements OnInit {
   showCreateModal = signal<boolean>(false);
   isSaving = signal<boolean>(false);
   formError = signal<string>('');
+  errorTimer: any = null;
   editingUserId = signal<number | null>(null);
   changePasswordMode = signal<'si' | 'no'>('no');
   
@@ -158,7 +160,16 @@ export class Usuarios implements OnInit {
     this.userForm.get('contrasena')?.updateValueAndValidity();
 
     this.formError.set('');
+    if (this.errorTimer) clearTimeout(this.errorTimer);
     this.showCreateModal.set(true);
+  }
+
+  showError(msg: string) {
+    if (this.errorTimer) clearTimeout(this.errorTimer);
+    this.formError.set(msg);
+    if (msg) {
+      this.errorTimer = setTimeout(() => this.formError.set(''), environment.errorTimeoutMs);
+    }
   }
 
   togglePasswordMode(mode: 'si' | 'no') {
@@ -208,6 +219,7 @@ export class Usuarios implements OnInit {
     });
 
     this.formError.set('');
+    if (this.errorTimer) clearTimeout(this.errorTimer);
     this.showCreateModal.set(true);
   }
 
@@ -234,6 +246,7 @@ export class Usuarios implements OnInit {
 
     this.isSaving.set(true);
     this.formError.set('');
+    if (this.errorTimer) clearTimeout(this.errorTimer);
     // Al usar getRawValue obtenemos valores de campos disabled también (como rolId)
     const formValue = this.userForm.getRawValue();
     
@@ -272,7 +285,7 @@ export class Usuarios implements OnInit {
       },
       error: (err) => {
         this.isSaving.set(false);
-        this.formError.set(extractErrorMessage(err, 'Error al guardar el usuario. Intenta nuevamente.'));
+        this.showError(extractErrorMessage(err, 'Error al guardar el usuario. Intenta nuevamente.'));
       }
     });
   }

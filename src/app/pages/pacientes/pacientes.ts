@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { PacienteService, PacienteResponse } from '../../core/services/paciente.service';
 import { extractErrorMessage } from '../../core/utils/api-error.utils';
+import { environment } from '../../../environments/environment';
 
 function pastDateValidator(control: AbstractControl): ValidationErrors | null {
   if (!control.value) return null;
@@ -33,6 +34,7 @@ export class Pacientes implements OnInit {
   showCreateModal = signal<boolean>(false);
   isSaving = signal<boolean>(false);
   formError = signal<string>('');
+  errorTimer: any = null;
   editingPacienteId = signal<number | null>(null);
 
   // Confirm Modal State
@@ -143,6 +145,14 @@ export class Pacientes implements OnInit {
     this.showCreateModal.set(false);
   }
 
+  showError(msg: string) {
+    if (this.errorTimer) clearTimeout(this.errorTimer);
+    this.formError.set(msg);
+    if (msg) {
+      this.errorTimer = setTimeout(() => this.formError.set(''), environment.errorTimeoutMs);
+    }
+  }
+
   onSubmitPaciente() {
     if (this.pacienteForm.invalid) {
       this.pacienteForm.markAllAsTouched();
@@ -151,6 +161,7 @@ export class Pacientes implements OnInit {
 
     this.isSaving.set(true);
     this.formError.set('');
+    if (this.errorTimer) clearTimeout(this.errorTimer);
 
     const formValue = this.pacienteForm.value;
     const dto = {
@@ -176,7 +187,7 @@ export class Pacientes implements OnInit {
       error: (err) => {
         console.error('Error guardando paciente:', err);
         this.isSaving.set(false);
-        this.formError.set(extractErrorMessage(err, 'Ocurrió un error al registrar el paciente.'));
+        this.showError(extractErrorMessage(err, 'Ocurrió un error al registrar el paciente.'));
       }
     });
   }
