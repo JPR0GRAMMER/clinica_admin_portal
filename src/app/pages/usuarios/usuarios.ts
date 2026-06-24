@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { UsuarioService, UsuarioResponse, UsuarioRegistroDto, UsuarioActualizarDto } from '../../core/services/usuario.service';
 import { CatalogoService, Rol, Especialidad } from '../../core/services/catalogo.service';
+import { AuthService } from '../../core/services/auth.service';
+import { extractErrorMessage } from '../../core/utils/api-error.utils';
 
 @Component({
   selector: 'app-usuarios',
@@ -45,7 +47,8 @@ export class Usuarios implements OnInit {
 
   constructor(
     private usuarioService: UsuarioService,
-    private catalogoService: CatalogoService
+    private catalogoService: CatalogoService,
+    private authService: AuthService
   ) {
     // Dynamic validation for Medico role
     this.userForm.get('rolId')?.valueChanges.subscribe(roleId => {
@@ -82,16 +85,17 @@ export class Usuarios implements OnInit {
     this.errorMessage.set('');
     this.usuarioService.listarUsuarios().subscribe({
       next: (data) => {
-        this.users.set(data);
+        const currentUserEmail = this.authService.getCurrentUserEmail();
+        const filteredUsers = currentUserEmail 
+          ? data.filter(u => u.correo !== currentUserEmail)
+          : data;
+        
+        this.users.set(filteredUsers);
         this.isLoading.set(false);
       },
       error: (err) => {
         console.error('Error al cargar usuarios:', err);
-        if (err.error && err.error.mensaje) {
-          this.errorMessage.set(err.error.mensaje);
-        } else {
-          this.errorMessage.set('No se pudieron cargar los usuarios. Revisa tu conexión al servidor.');
-        }
+        this.errorMessage.set(extractErrorMessage(err, 'No se pudieron cargar los usuarios. Revisa tu conexión al servidor.'));
         this.isLoading.set(false);
       }
     });
@@ -114,12 +118,12 @@ export class Usuarios implements OnInit {
     } else if (action === 'deshabilitar') {
       this.usuarioService.deshabilitarUsuario(user.id).subscribe({
         next: () => this.loadUsers(),
-        error: (err) => alert(err.error?.mensaje || 'Error al deshabilitar el usuario')
+        error: (err) => alert(extractErrorMessage(err, 'Error al deshabilitar el usuario'))
       });
     } else if (action === 'habilitar') {
       this.usuarioService.habilitarUsuario(user.id).subscribe({
         next: () => this.loadUsers(),
-        error: (err) => alert(err.error?.mensaje || 'Error al habilitar el usuario')
+        error: (err) => alert(extractErrorMessage(err, 'Error al habilitar el usuario'))
       });
     } else {
       console.log(`Acción: ${action} sobre el usuario: ${user.nombre} ${user.apellido}`);
@@ -268,7 +272,7 @@ export class Usuarios implements OnInit {
       },
       error: (err) => {
         this.isSaving.set(false);
-        this.formError.set(err.error?.mensaje || 'Error al guardar el usuario. Intenta nuevamente.');
+        this.formError.set(extractErrorMessage(err, 'Error al guardar el usuario. Intenta nuevamente.'));
       }
     });
   }

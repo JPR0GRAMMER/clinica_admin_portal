@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, computed, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
@@ -7,6 +7,7 @@ import { PacienteService, PacienteResponse } from '../../core/services/paciente.
 import { EspecialidadService, EspecialidadResponse } from '../../core/services/especialidad.service';
 import { HorarioMedicoService, HorarioMedicoResponse } from '../../core/services/horario-medico.service';
 import { MedicoService } from '../../core/services/medico.service';
+import { extractErrorMessage } from '../../core/utils/api-error.utils';
 
 export interface DoctorBlock {
   medicoId: number;
@@ -34,6 +35,20 @@ export class CitasForm implements OnInit {
   isSaving = signal<boolean>(false);
   formError = signal<string>('');
   
+  // Custom Select State
+  isPacienteDropdownOpen = signal<boolean>(false);
+  pacienteSearchQuery = signal<string>('');
+  
+  filteredPacientes = computed(() => {
+    const query = this.pacienteSearchQuery().toLowerCase().trim();
+    if (!query) return this.pacientes();
+    
+    return this.pacientes().filter(p => {
+      const nombreCompleto = `${p.nombre} ${p.apellido}`.toLowerCase();
+      return nombreCompleto.includes(query) || p.documentoIdentidad.includes(query);
+    });
+  });
+  
   // Para bloquear fechas anteriores a hoy
   minDate = signal<string>('');
   
@@ -55,8 +70,16 @@ export class CitasForm implements OnInit {
     private horarioMedicoService: HorarioMedicoService,
     private medicoService: MedicoService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private eRef: ElementRef
   ) {}
+
+  @HostListener('document:click', ['$event'])
+  clickOut(event: Event) {
+    if (!this.eRef.nativeElement.contains(event.target)) {
+      this.isPacienteDropdownOpen.set(false);
+    }
+  }
 
   ngOnInit() {
     // Configurar minDate para no permitir seleccionar fechas anteriores a hoy en el HTML
@@ -250,6 +273,30 @@ export class CitasForm implements OnInit {
     });
   }
 
+  togglePacienteDropdown() {
+    this.isPacienteDropdownOpen.set(!this.isPacienteDropdownOpen());
+  }
+
+  selectPaciente(id: number) {
+    this.citaForm.patchValue({ pacienteId: id });
+    this.citaForm.get('pacienteId')?.markAsTouched();
+    this.isPacienteDropdownOpen.set(false);
+    this.pacienteSearchQuery.set('');
+  }
+
+  onSearchPaciente(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.pacienteSearchQuery.set(input.value);
+  }
+
+  getSelectedPacienteName(): string {
+    const id = this.citaForm.get('pacienteId')?.value;
+    if (!id) return '';
+    const paciente = this.pacientes().find(p => p.id === id);
+    if (!paciente) return '';
+    return `${paciente.nombre} ${paciente.apellido} (DNI: ${paciente.documentoIdentidad})`;
+  }
+
   onSubmit() {
     if (this.citaForm.invalid) {
       this.citaForm.markAllAsTouched();
@@ -276,7 +323,7 @@ export class CitasForm implements OnInit {
         },
         error: (err) => {
           this.isSaving.set(false);
-          this.formError.set(err.error?.message || 'Error al reprogramar la cita.');
+          this.formError.set(extractErrorMessage(err, 'Error al reprogramar la cita.'));
         }
       });
     } else {
@@ -287,7 +334,7 @@ export class CitasForm implements OnInit {
         },
         error: (err) => {
           this.isSaving.set(false);
-          this.formError.set(err.error?.message || 'Error al agendar la cita.');
+          this.formError.set(extractErrorMessage(err, 'Error al agendar la cita.'));
         }
       });
     }

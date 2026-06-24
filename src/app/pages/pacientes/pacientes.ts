@@ -2,6 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { PacienteService, PacienteResponse } from '../../core/services/paciente.service';
+import { extractErrorMessage } from '../../core/utils/api-error.utils';
 
 function pastDateValidator(control: AbstractControl): ValidationErrors | null {
   if (!control.value) return null;
@@ -175,11 +176,7 @@ export class Pacientes implements OnInit {
       error: (err) => {
         console.error('Error guardando paciente:', err);
         this.isSaving.set(false);
-        if (err.error && err.error.mensaje) {
-          this.formError.set(err.error.mensaje);
-        } else {
-          this.formError.set('Ocurrió un error al registrar el paciente.');
-        }
+        this.formError.set(extractErrorMessage(err, 'Ocurrió un error al registrar el paciente.'));
       }
     });
   }
@@ -194,11 +191,7 @@ export class Pacientes implements OnInit {
       },
       error: (err) => {
         console.error('Error al cargar pacientes:', err);
-        if (err.error && err.error.mensaje) {
-          this.errorMessage.set(err.error.mensaje);
-        } else {
-          this.errorMessage.set('No se pudieron cargar los pacientes. Revisa tu conexión al servidor.');
-        }
+        this.errorMessage.set(extractErrorMessage(err, 'No se pudieron cargar los pacientes. Revisa tu conexión al servidor.'));
         this.isLoading.set(false);
       }
     });

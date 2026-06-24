@@ -20,21 +20,39 @@
   } @else {
     <div class="form-card">
       <form [formGroup]="citaForm" (ngSubmit)="onSubmit()">
-        @if (formError()) {
-          <div class="error-banner">
-            {{ formError() }}
-          </div>
-        }
 
         <div class="top-selectors">
           <div class="form-group">
             <label>Paciente</label>
-            <select formControlName="pacienteId">
-              <option [ngValue]="null" disabled>Seleccione un paciente</option>
-              @for (paciente of pacientes(); track paciente.id) {
-                <option [ngValue]="paciente.id">{{ paciente.nombre }} {{ paciente.apellido }} (DNI: {{ paciente.documentoIdentidad }})</option>
+            <div class="custom-select-container">
+              <div class="custom-select-trigger" 
+                   (click)="togglePacienteDropdown()" 
+                   [ngClass]="{'open': isPacienteDropdownOpen(), 'invalid': citaForm.get('pacienteId')?.invalid && citaForm.get('pacienteId')?.touched}">
+                <span>{{ getSelectedPacienteName() || 'Seleccione un paciente' }}</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="chevron"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </div>
+              
+              @if (isPacienteDropdownOpen()) {
+                <div class="custom-select-dropdown">
+                  <div class="custom-select-search">
+                    <input type="text" placeholder="Buscar por nombre o DNI..." [value]="pacienteSearchQuery()" (input)="onSearchPaciente($event)" (click)="$event.stopPropagation()">
+                  </div>
+                  <div class="custom-select-options">
+                    @for (paciente of filteredPacientes(); track paciente.id) {
+                      <div class="custom-select-option" 
+                           [ngClass]="{'selected': citaForm.get('pacienteId')?.value === paciente.id}"
+                           (click)="selectPaciente(paciente.id)">
+                        <span>{{ paciente.nombre }} {{ paciente.apellido }}</span>
+                        <span class="text-muted">DNI: {{ paciente.documentoIdentidad }}</span>
+                      </div>
+                    }
+                    @if (filteredPacientes().length === 0) {
+                      <div class="custom-select-empty">No se encontraron pacientes</div>
+                    }
+                  </div>
+                </div>
               }
-            </select>
+            </div>
           </div>
           
           <div class="form-group">
@@ -101,6 +119,12 @@
               <div class="empty-icon">👈</div>
               <p>Selecciona una especialidad y una fecha para ver los horarios disponibles.</p>
            </div>
+        }
+
+        @if (formError()) {
+          <div class="error-banner" style="margin-top: 32px; margin-bottom: 0;">
+            {{ formError() }}
+          </div>
         }
 
         <div class="form-actions">
