@@ -63,6 +63,69 @@
               {{ a.diagnostico }}
             </div>
           </div>
+
+          @if (a.recetas && a.recetas.length > 0) {
+            @for (receta of a.recetas; track receta) {
+              <div class="card-section">
+                <h2 class="section-title">Receta Médica</h2>
+                
+                <div class="mb-3">
+                  <span class="data-label">Indicaciones Generales</span>
+                  <div class="text-block" style="margin-top: 0.25rem;">
+                    {{ receta.indicacionesGenerales }}
+                  </div>
+                </div>
+                
+                <div class="table-responsive">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Medicamento</th>
+                        <th>Dosis</th>
+                        <th>Frecuencia</th>
+                        <th>Duración</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (det of receta.detalles; track det) {
+                        <tr>
+                          <td>
+                            <strong>{{ det.medicamentoNombre }}</strong><br/>
+                            <small class="text-muted">{{ det.medicamentoPrincipioActivo }}</small>
+                          </td>
+                          <td>{{ det.dosis }}</td>
+                          <td>{{ det.frecuencia }}</td>
+                          <td>{{ det.duracionTratamiento }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            }
+          }
+
+          @if (a.procedimientos && a.procedimientos.length > 0) {
+            @for (proc of a.procedimientos; track proc) {
+              <div class="card-section">
+                <h2 class="section-title">Procedimiento Médico</h2>
+                <div class="data-grid mb-3">
+                  <div class="data-item" style="grid-column: span 2;">
+                    <span class="data-label">Descripción del Procedimiento</span>
+                    <div class="text-block" style="margin-top: 0.25rem;">
+                      {{ proc.descripcionProcedimiento }}
+                    </div>
+                  </div>
+                  <div class="data-item" style="grid-column: span 2;">
+                    <span class="data-label">Resultado Esperado / Observaciones</span>
+                    <div class="text-block" style="margin-top: 0.25rem;">
+                      {{ proc.resultado }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+          }
         </div>
       </div>
 

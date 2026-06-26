@@ -34,6 +34,24 @@ export interface ProcedimientoMedicoDto {
   resultado: string;
 }
 
+export interface DetalleRecetaResponseDto {
+  medicamentoNombre: string;
+  medicamentoPrincipioActivo: string;
+  dosis: string;
+  frecuencia: string;
+  duracionTratamiento: string;
+}
+
+export interface RecetaResponseDto {
+  indicacionesGenerales: string;
+  detalles: DetalleRecetaResponseDto[];
+}
+
+export interface ProcedimientoResponseDto {
+  descripcionProcedimiento: string;
+  resultado: string;
+}
+
 export interface AtencionMedicaResponseDto {
   id: number;
   citaMedicaId: number;
@@ -45,6 +63,8 @@ export interface AtencionMedicaResponseDto {
   diagnostico: string;
   cie10: Cie10Dto;
   fechaAtencion: string; // ISO String
+  recetas?: RecetaResponseDto[];
+  procedimientos?: ProcedimientoResponseDto[];
 }
 
 @Injectable({
