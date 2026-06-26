@@ -18,7 +18,10 @@ export const routes: Routes = [
       { path: 'pacientes', component: Pacientes },
       { path: 'citas', loadComponent: () => import('./pages/citas/citas').then(m => m.Citas) },
       { path: 'citas/agendar', loadComponent: () => import('./pages/citas/citas-form').then(m => m.CitasForm) },
-      { path: 'citas/editar/:id', loadComponent: () => import('./pages/citas/citas-form').then(m => m.CitasForm) }
+      { path: 'citas/editar/:id', loadComponent: () => import('./pages/citas/citas-form').then(m => m.CitasForm) },
+      { path: 'atenciones', loadComponent: () => import('./pages/atenciones-medicas/atenciones-medicas').then(m => m.AtencionesMedicas) },
+      { path: 'atenciones/registrar', loadComponent: () => import('./pages/atenciones-medicas/atencion-medica-form').then(m => m.AtencionMedicaForm) },
+      { path: 'atenciones/detalle/:id', loadComponent: () => import('./pages/atenciones-medicas/atencion-medica-detalle').then(m => m.AtencionMedicaDetalle) }
     ]
   },
   { path: '**', redirectTo: '' }

@@ -1,0 +1,209 @@
+  <div class="page-header">
+    <div class="breadcrumb">
+      <span>Gestión Clínica</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      <a routerLink="/atenciones" style="text-decoration: none; color: #64748b; cursor: pointer;">Atenciones Médicas</a>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      <span class="current">Registrar</span>
+    </div>
+    <h1 class="page-title" style="margin-top: 12px;">Registrar Atención Médica</h1>
+    <p class="page-subtitle">Registro unificado de consulta, diagnóstico, receta y procedimiento</p>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Cargando datos necesarios...</p>
+    </div>
+  } @else {
+    <div class="form-card">
+      <form [formGroup]="atencionForm" (ngSubmit)="onSubmit()">
+        <!-- SECCIÓN 1: DATOS BÁSICOS -->
+        <h3 class="section-title">Datos Clínicos Básicos</h3>
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label>Seleccionar Cita Pendiente</label>
+            <select formControlName="citaMedicaId" 
+                    [class.is-invalid]="atencionForm.get('citaMedicaId')?.invalid && atencionForm.get('citaMedicaId')?.touched">
+              <option [ngValue]="null" disabled>Seleccione una cita confirmada</option>
+              @for (cita of citas(); track cita.id) {
+                <option [value]="cita.id">
+                  {{ cita.fechaCita }} {{ cita.horaCita.substring(0, 5) }} - Paciente: {{ cita.pacienteNombreCompleto }} ({{ cita.medicoNombreCompleto }})
+                </option>
+              }
+            </select>
+            @if (atencionForm.get('citaMedicaId')?.invalid && atencionForm.get('citaMedicaId')?.touched) {
+              <div class="error-message">La cita médica es requerida.</div>
+            }
+          </div>
+
+          <div class="form-group full-width">
+            <label>Motivo de la Consulta</label>
+            <textarea formControlName="motivoConsulta" rows="3" placeholder="Describe los síntomas y el motivo principal por el que el paciente acude..."
+                      [class.is-invalid]="atencionForm.get('motivoConsulta')?.invalid && atencionForm.get('motivoConsulta')?.touched"></textarea>
+          </div>
+
+          <div class="form-group full-width">
+            <label>Diagnóstico (Detalle)</label>
+            <textarea formControlName="diagnostico" rows="3" placeholder="Detalle clínico del diagnóstico..."
+                      [class.is-invalid]="atencionForm.get('diagnostico')?.invalid && atencionForm.get('diagnostico')?.touched"></textarea>
+          </div>
+
+          <div class="form-group full-width">
+            <label>Código CIE-10 (Diagnóstico Oficial)</label>
+            <div class="custom-select-container">
+              <div class="custom-select-trigger" 
+                   (click)="toggleCie10Dropdown()" 
+                   [ngClass]="{'open': isCie10DropdownOpen(), 'invalid': atencionForm.get('codigoCie10')?.invalid && atencionForm.get('codigoCie10')?.touched}">
+                <span>{{ selectedCie10() ? (selectedCie10()?.codigo + ' - ' + selectedCie10()?.descripcion) : 'Buscar código CIE-10 o descripción...' }}</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="chevron"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </div>
+
+              @if (isCie10DropdownOpen()) {
+                <div class="custom-select-dropdown">
+                  <div class="custom-select-search">
+                    <input type="text" placeholder="Escribe para buscar..." 
+                           (input)="onSearchCie10($event)" 
+                           (click)="$event.stopPropagation()"
+                           [value]="cie10SearchQuery()">
+                  </div>
+                  <div class="custom-select-options">
+                    @for (item of cie10Results(); track item.codigo) {
+                      <div class="custom-select-option" 
+                           [ngClass]="{'selected': atencionForm.get('codigoCie10')?.value === item.codigo}"
+                           (click)="selectCie10(item)">
+                        <span>{{ item.descripcion }}</span>
+                        <span class="text-muted">CIE-10: {{ item.codigo }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <hr class="section-divider">
+
+        <!-- SECCIÓN 2: PROCEDIMIENTO (OPCIONAL) -->
+        <div class="optional-toggle-container">
+          <button type="button" class="btn-toggle" [ngClass]="{'active': incluyeProcedimiento()}" (click)="toggleProcedimiento()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
+            {{ incluyeProcedimiento() ? 'Quitar Procedimiento' : 'Añadir Procedimiento' }}
+          </button>
+        </div>
+
+        @if (incluyeProcedimiento()) {
+          <div class="optional-section" formGroupName="procedimiento">
+            <h3 class="section-title">Procedimiento Médico</h3>
+            <div class="form-grid">
+              <div class="form-group full-width">
+                <label>Descripción del Procedimiento</label>
+                <textarea formControlName="descripcionProcedimiento" rows="3" placeholder="Ej: Curación de herida, Inmovilización con yeso..."></textarea>
+              </div>
+
+              <div class="form-group full-width">
+                <label>Resultado / Observaciones</label>
+                <textarea formControlName="resultado" rows="3" placeholder="Ej: Procedimiento exitoso sin complicaciones..."></textarea>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- SECCIÓN 3: RECETA MÉDICA (OPCIONAL) -->
+        <div class="optional-toggle-container">
+          <button type="button" class="btn-toggle" [ngClass]="{'active': incluyeReceta()}" (click)="toggleReceta()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
+            {{ incluyeReceta() ? 'Quitar Receta Médica' : 'Añadir Receta Médica' }}
+          </button>
+        </div>
+
+        @if (incluyeReceta()) {
+          <div class="optional-section" formGroupName="receta">
+            <h3 class="section-title">Receta Médica</h3>
+            <div class="form-grid">
+              <div class="form-group full-width">
+                <label>Indicaciones Generales</label>
+                <textarea formControlName="indicacionesGenerales" rows="2" placeholder="Indicaciones para el paciente (ej: Reposo por 3 días, tomar abundante agua...)"></textarea>
+              </div>
+            </div>
+
+            <h4 class="subsection-title">Medicamentos</h4>
+            <div formArrayName="detalles" class="medicamentos-list">
+              @for (detalle of detallesReceta.controls; track $index) {
+                <div [formGroupName]="$index" class="medicamento-row">
+                  
+                  <div class="form-group med-search">
+                    <label>Medicamento</label>
+                    <div class="custom-select-container">
+                      <div class="custom-select-trigger" 
+                           (click)="toggleMedicamentoDropdown($index, $event)">
+                        <span>{{ selectedMedicamentos()[$index] ? selectedMedicamentos()[$index]?.nombreComercial + ' (' + selectedMedicamentos()[$index]?.presentacion + ' ' + selectedMedicamentos()[$index]?.concentracion + ' ' + selectedMedicamentos()[$index]?.unidadMedida + ')' : 'Buscar medicamento...' }}</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="chevron"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                      </div>
+
+                      @if (isMedicamentoDropdownOpen()[$index]) {
+                        <div class="custom-select-dropdown">
+                          <div class="custom-select-search">
+                            <input type="text" placeholder="Escribe para buscar..." 
+                                   (input)="onSearchMedicamento($index, $event)" 
+                                   (click)="$event.stopPropagation()"
+                                   [value]="medicamentoSearchQuery()[$index]">
+                          </div>
+                          <div class="custom-select-options">
+                            @for (item of medicamentosBusqueda(); track item.id) {
+                              <div class="custom-select-option" (click)="selectMedicamento($index, item)">
+                                <span>{{ item.nombreComercial }}</span>
+                                <span class="badge">{{ item.presentacion }} {{ item.concentracion }} {{ item.unidadMedida }}</span>
+                              </div>
+                            }
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label>Dosis</label>
+                    <input type="text" formControlName="dosis" placeholder="Ej: 1 tableta">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label>Frecuencia</label>
+                    <input type="text" formControlName="frecuencia" placeholder="Ej: Cada 8 horas">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label>Duración</label>
+                    <input type="text" formControlName="duracionTratamiento" placeholder="Ej: 5 días">
+                  </div>
+
+                  <button type="button" class="btn-remove" (click)="removeMedicamento($index)" title="Eliminar medicamento">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  </button>
+                </div>
+              }
+            </div>
+            
+            <button type="button" class="btn-add-item" (click)="addMedicamento()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              Agregar otro medicamento
+            </button>
+          </div>
+        }
+
+        @if (formError()) {
+          <div class="alert-danger" style="margin-top: 2rem;">
+            {{ formError() }}
+          </div>
+        }
+
+        <div class="form-actions mt-4">
+          <button type="button" class="btn-secondary" routerLink="/atenciones" [disabled]="isSaving()">Cancelar</button>
+          <button type="submit" class="btn-primary" [disabled]="isSaving()">
+            {{ isSaving() ? 'Guardando...' : 'Guardar Todo' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  }

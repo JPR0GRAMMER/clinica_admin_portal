@@ -1,0 +1,70 @@
+  <div class="page-header">
+    <div>
+      <div class="breadcrumb">
+        <span>Gestión Clínica</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        <span class="current">Atenciones Médicas</span>
+      </div>
+      <h1 style="margin-top: 8px; font-size: 24px; color: #0f172a;">Mis Atenciones Médicas</h1>
+    </div>
+    <a routerLink="/atenciones/registrar" class="btn-primary" style="text-decoration: none; display: inline-block;">
+      Nueva Atención
+    </a>
+  </div>
+
+  @if (error()) {
+    <div class="alert alert-danger">{{ error() }}</div>
+  }
+
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Cargando historial clínico...</p>
+    </div>
+  } @else {
+    @if (atenciones().length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">🩺</div>
+        <h3>No hay atenciones registradas</h3>
+        <p>Aún no has registrado ninguna atención médica.</p>
+      </div>
+    } @else {
+      <div class="grid">
+        @for (atencion of atenciones(); track atencion.id) {
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <h3 class="card-title">{{ atencion.pacienteNombreCompleto }}</h3>
+              </div>
+              <div class="card-subtitle">
+                <span>DNI: {{ atencion.pacienteDocumento }}</span>
+              </div>
+            </div>
+            
+            <div class="card-body">
+              <div class="diagnosis-section">
+                <div class="info-label">Diagnóstico Principal</div>
+                <div class="diagnosis-content">
+                  <span class="diagnosis-badge">{{ atencion.cie10.codigo }}</span>
+                  <span class="diagnosis-desc">{{ atencion.cie10.descripcion }}</span>
+                </div>
+              </div>
+              
+              <div class="date-section">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                {{ atencion.fechaAtencion | date:'mediumDate' }} &bull; {{ atencion.fechaAtencion | date:'shortTime' }}
+              </div>
+            </div>
+            
+            <div class="card-footer">
+              <button class="btn-icon" [routerLink]="['/atenciones/detalle', atencion.id]">
+                Ver Detalle
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }

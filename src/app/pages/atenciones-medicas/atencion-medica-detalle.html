@@ -1,0 +1,70 @@
+  <div class="page-header">
+    <div class="breadcrumb">
+      <span>Gestión Clínica</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      <a routerLink="/atenciones" style="text-decoration: none; color: #64748b; cursor: pointer;">Atenciones Médicas</a>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      <span class="current">Detalle Clínico</span>
+    </div>
+    <h1 class="page-title" style="margin-top: 12px;">Detalle Clínico</h1>
+    <p class="page-subtitle">Información detallada de la atención médica</p>
+  </div>
+
+  @if (error()) {
+    <div class="alert alert-danger">{{ error() }}</div>
+  }
+
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Cargando historia clínica...</p>
+    </div>
+  } @else if (atencion(); as a) {
+    <div class="content-layout">
+      <!-- Panel Izquierdo: Resumen y Datos -->
+      <div class="main-panel">
+        <div class="detail-card">
+          <div class="card-section">
+            <h2 class="section-title">Información del Paciente</h2>
+            <div class="data-grid">
+              <div class="data-item">
+                <span class="data-label">Paciente</span>
+                <span class="data-value font-bold">{{ a.pacienteNombreCompleto }}</span>
+              </div>
+              <div class="data-item">
+                <span class="data-label">Documento</span>
+                <span class="data-value">{{ a.pacienteDocumento }}</span>
+              </div>
+              <div class="data-item">
+                <span class="data-label">Fecha de Atención</span>
+                <span class="data-value">{{ a.fechaAtencion | date:'MMMM d, y, h:mm:ss a' }}</span>
+              </div>
+              <div class="data-item">
+                <span class="data-label">Médico Tratante</span>
+                <span class="data-value">{{ a.medicoNombreCompleto }} (C.M.P: {{ a.medicoColegiatura }})</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-section">
+            <h2 class="section-title">Motivo de Consulta</h2>
+            <div class="text-block">
+              {{ a.motivoConsulta }}
+            </div>
+          </div>
+
+          <div class="card-section">
+            <h2 class="section-title">Diagnóstico Médico</h2>
+            <div class="diagnostico-badge">
+              <span class="cie10-code">{{ a.cie10.codigo }}</span>
+              <span class="cie10-desc">{{ a.cie10.descripcion }}</span>
+            </div>
+            <div class="text-block mt-3">
+              {{ a.diagnostico }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  }
