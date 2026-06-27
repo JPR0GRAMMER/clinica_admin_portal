@@ -62,7 +62,7 @@
   opacity: 0.7;
 }
 
-.nav-item svg {
+.nav-item ::ng-deep svg {
   width: 22px;
   height: 22px;
 }

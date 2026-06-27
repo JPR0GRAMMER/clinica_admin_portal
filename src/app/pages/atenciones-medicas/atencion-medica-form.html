@@ -130,29 +130,29 @@
 
             <h4 class="subsection-title">Medicamentos</h4>
             <div formArrayName="detalles" class="medicamentos-list">
-              @for (detalle of detallesReceta.controls; track $index) {
-                <div [formGroupName]="$index" class="medicamento-row">
+              @for (detalle of detallesReceta.controls; track $index; let i = $index) {
+                <div [formGroupName]="i" class="medicamento-row">
                   
                   <div class="form-group med-search">
                     <label>Medicamento</label>
                     <div class="custom-select-container">
                       <div class="custom-select-trigger" 
-                           (click)="toggleMedicamentoDropdown($index, $event)">
-                        <span>{{ selectedMedicamentos()[$index] ? selectedMedicamentos()[$index]?.nombreComercial + ' (' + selectedMedicamentos()[$index]?.presentacion + ' ' + selectedMedicamentos()[$index]?.concentracion + ' ' + selectedMedicamentos()[$index]?.unidadMedida + ')' : 'Buscar medicamento...' }}</span>
+                           (click)="toggleMedicamentoDropdown(i, $event)">
+                        <span>{{ selectedMedicamentos()[i] ? selectedMedicamentos()[i]?.nombreComercial + ' (' + selectedMedicamentos()[i]?.presentacion + ' ' + selectedMedicamentos()[i]?.concentracion + ' ' + selectedMedicamentos()[i]?.unidadMedida + ')' : 'Buscar medicamento...' }}</span>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="chevron"><polyline points="6 9 12 15 18 9"></polyline></svg>
                       </div>
 
-                      @if (isMedicamentoDropdownOpen()[$index]) {
+                      @if (isMedicamentoDropdownOpen()[i]) {
                         <div class="custom-select-dropdown">
                           <div class="custom-select-search">
                             <input type="text" placeholder="Escribe para buscar..." 
-                                   (input)="onSearchMedicamento($index, $event)" 
+                                   (input)="onSearchMedicamento(i, $event)" 
                                    (click)="$event.stopPropagation()"
-                                   [value]="medicamentoSearchQuery()[$index]">
+                                   [value]="medicamentoSearchQuery()[i]">
                           </div>
                           <div class="custom-select-options">
                             @for (item of medicamentosBusqueda(); track item.id) {
-                              <div class="custom-select-option" (click)="selectMedicamento($index, item)">
+                              <div class="custom-select-option" (click)="selectMedicamento(i, item)">
                                 <span>{{ item.nombreComercial }}</span>
                                 <span class="badge">{{ item.presentacion }} {{ item.concentracion }} {{ item.unidadMedida }}</span>
                               </div>
@@ -178,7 +178,7 @@
                     <input type="text" formControlName="duracionTratamiento" placeholder="Ej: 5 días">
                   </div>
 
-                  <button type="button" class="btn-remove" (click)="removeMedicamento($index)" title="Eliminar medicamento">
+                  <button type="button" class="btn-remove" (click)="removeMedicamento(i)" title="Eliminar medicamento">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                   </button>
                 </div>

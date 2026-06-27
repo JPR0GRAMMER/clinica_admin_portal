@@ -149,8 +149,7 @@ export class CitasForm implements OnInit {
 
   loadCitaToEdit(id: number) {
     this.isLoading.set(true);
-    // Para simplificar, listamos todas las citas y buscamos la nuestra, 
-    // idealmente habría un endpoint GET /api/citas/{id}
+    // Para simplificar, listamos todas las citas y buscamos la nuestra
     this.citaService.listarCitas().subscribe({
       next: (citas) => {
         const cita = citas.find(c => c.id === id);
@@ -162,15 +161,34 @@ export class CitasForm implements OnInit {
               const especialidadObj = this.especialidades().find(e => e.nombre === medico?.especialidad);
               
               if (especialidadObj) {
-                // Prevenimos que valueChanges borre la hora
+                // Prevenimos que valueChanges se disparen usando emitEvent: false
+                // Esto evita el parpadeo de grilla vacía
                 this.citaForm.patchValue({
                   pacienteId: cita.pacienteId,
                   especialidadId: especialidadObj.id,
                   fechaCita: cita.fechaCita,
                   medicoId: cita.medicoId,
                   horaCita: cita.horaCita.substring(0, 5)
+                }, { emitEvent: false });
+                
+                // Cargamos los horarios manualmente para sincronizar perfectamente la UI
+                this.isFetchingHorarios.set(true);
+                this.horarioMedicoService.listarPorEspecialidad(especialidadObj.id).subscribe({
+                  next: (horarios) => {
+                    this.horariosMedico.set(horarios);
+                    this.calculateDoctorBlocks();
+                    this.isLoading.set(false); // Solo mostramos la UI cuando los doctores ya están procesados
+                  },
+                  error: () => {
+                    this.isFetchingHorarios.set(false);
+                    this.isLoading.set(false);
+                  }
                 });
+              } else {
+                 this.isLoading.set(false);
               }
+            },
+            error: () => {
               this.isLoading.set(false);
             }
           });

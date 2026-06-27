@@ -2,6 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CitaService, CitaResponse } from '../../core/services/cita.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-citas',
@@ -14,6 +15,7 @@ export class Citas implements OnInit {
   citas = signal<CitaResponse[]>([]);
   isLoading = signal<boolean>(true);
   isSaving = signal<boolean>(false);
+  userRole = signal<string>('');
   
   // Status Action Modal State
   showStatusModal = signal<boolean>(false);
@@ -23,9 +25,10 @@ export class Citas implements OnInit {
   // Dropdown
   activeDropdownIndex = signal<number | null>(null);
 
-  constructor(private citaService: CitaService) {}
+  constructor(private citaService: CitaService, private authService: AuthService) {}
 
   ngOnInit() {
+    this.userRole.set(this.authService.getRol());
     this.loadData();
 
     document.addEventListener('click', () => {

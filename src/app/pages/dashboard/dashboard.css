@@ -1,0 +1,40 @@
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.breadcrumb svg {
+  width: 14px;
+  height: 14px;
+}
+
+.breadcrumb .current {
+  color: #0f172a;
+  font-weight: 500;
+}
+
+.page-content {
+  padding: 2rem;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #e2e8f0);
+}
+
+.page-content h2 {
+  color: #0f172a;
+  margin-bottom: 0.5rem;
+}
+
+.page-content p {
+  color: #64748b;
+}

@@ -8,8 +8,16 @@ export interface LoginRequest {
   contrasena: string;
 }
 
+export interface Vista {
+  nombre: string;
+  ruta: string;
+  icono: string;
+}
+
 export interface AuthResponse {
   token: string;
+  rol: string;
+  vistas: Vista[];
 }
 
 @Injectable({
@@ -18,6 +26,8 @@ export interface AuthResponse {
 export class AuthService {
   private apiUrl = `${environment.apiUrl}/auth`;
   private readonly TOKEN_KEY = 'auth_token';
+  private readonly VISTAS_KEY = 'auth_vistas';
+  private readonly ROL_KEY = 'auth_rol';
 
   constructor(private http: HttpClient) {}
 
@@ -26,6 +36,8 @@ export class AuthService {
       tap(response => {
         if (response.token) {
           this.setToken(response.token);
+          localStorage.setItem(this.VISTAS_KEY, JSON.stringify(response.vistas || []));
+          localStorage.setItem(this.ROL_KEY, response.rol || '');
         }
       })
     );
@@ -33,10 +45,21 @@ export class AuthService {
 
   logout(): void {
     localStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem(this.VISTAS_KEY);
+    localStorage.removeItem(this.ROL_KEY);
   }
 
   getToken(): string | null {
     return localStorage.getItem(this.TOKEN_KEY);
+  }
+
+  getVistas(): Vista[] {
+    const vistas = localStorage.getItem(this.VISTAS_KEY);
+    return vistas ? JSON.parse(vistas) : [];
+  }
+
+  getRol(): string {
+    return localStorage.getItem(this.ROL_KEY) || '';
   }
 
   isLoggedIn(): boolean {

@@ -41,7 +41,12 @@ export class LoginComponent {
       this.authService.login({ correo: email!, contrasena: password! }).subscribe({
         next: () => {
           this.isLoading.set(false);
-          this.router.navigate(['/usuarios']); // Dirige al dashboard principal
+          const vistas = this.authService.getVistas();
+          if (vistas && vistas.length > 0) {
+            this.router.navigate([vistas[0].ruta]);
+          } else {
+            this.errorMessage.set('El usuario no tiene vistas asignadas.');
+          }
         },
         error: (err) => {
           this.isLoading.set(false);
