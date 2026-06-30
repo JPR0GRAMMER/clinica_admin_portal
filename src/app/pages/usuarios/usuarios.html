@@ -95,6 +95,11 @@
               {{ user.detallesMedico.numeroColegiatura }}
             </div>
           }
+          @if (user.detallesFarmaceutico) {
+            <div class="medico-details">
+              CQFP: {{ user.detallesFarmaceutico.numeroColegiatura }}
+            </div>
+          }
         </div>
         <div class="user-role">
           {{ user.rolNombre || 'Sin rol' }}
@@ -213,6 +218,16 @@
                   <span class="error-text">Debes seleccionar una especialidad</span>
                 }
               </div>
+            </div>
+          }
+
+          @if (isFarmaceuticoSelected) {
+            <div class="form-group">
+              <label>Número de Colegiatura (CQFP)</label>
+              <input type="text" formControlName="numeroColegiaturaFarmaceutico" placeholder="Ej. 654321">
+              @if (userForm.get('numeroColegiaturaFarmaceutico')?.invalid && (userForm.get('numeroColegiaturaFarmaceutico')?.dirty || userForm.get('numeroColegiaturaFarmaceutico')?.touched)) {
+                <span class="error-text">El CQFP es obligatorio</span>
+              }
             </div>
           }
         </div>

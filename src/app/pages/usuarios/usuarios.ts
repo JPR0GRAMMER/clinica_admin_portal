@@ -44,7 +44,8 @@ export class Usuarios implements OnInit {
     ]),
     rolId: new FormControl<number | null>(null, [Validators.required]),
     numeroColegiatura: new FormControl(''),
-    especialidadId: new FormControl<number | null>(null)
+    especialidadId: new FormControl<number | null>(null),
+    numeroColegiaturaFarmaceutico: new FormControl('')
   });
 
   constructor(
@@ -52,11 +53,13 @@ export class Usuarios implements OnInit {
     private catalogoService: CatalogoService,
     private authService: AuthService
   ) {
-    // Dynamic validation for Medico role
+    // Dynamic validation for Medico and Farmaceutico roles
     this.userForm.get('rolId')?.valueChanges.subscribe(roleId => {
       const isMedico = this.isMedicoRole(Number(roleId));
+      const isFarmaceutico = this.isFarmaceuticoRole(Number(roleId));
       const colegiaturaCtrl = this.userForm.get('numeroColegiatura');
       const especialidadCtrl = this.userForm.get('especialidadId');
+      const colegiaturaFarmaceuticoCtrl = this.userForm.get('numeroColegiaturaFarmaceutico');
 
       if (isMedico) {
         colegiaturaCtrl?.setValidators([Validators.required]);
@@ -67,8 +70,17 @@ export class Usuarios implements OnInit {
         colegiaturaCtrl?.setValue('');
         especialidadCtrl?.setValue(null);
       }
+
+      if (isFarmaceutico) {
+        colegiaturaFarmaceuticoCtrl?.setValidators([Validators.required]);
+      } else {
+        colegiaturaFarmaceuticoCtrl?.clearValidators();
+        colegiaturaFarmaceuticoCtrl?.setValue('');
+      }
+
       colegiaturaCtrl?.updateValueAndValidity();
       especialidadCtrl?.updateValueAndValidity();
+      colegiaturaFarmaceuticoCtrl?.updateValueAndValidity();
     });
   }
 
@@ -215,7 +227,8 @@ export class Usuarios implements OnInit {
       contrasena: '',
       rolId: rol ? rol.id : null,
       numeroColegiatura: user.detallesMedico?.numeroColegiatura || '',
-      especialidadId: especialidadId
+      especialidadId: especialidadId,
+      numeroColegiaturaFarmaceutico: user.detallesFarmaceutico?.numeroColegiatura || ''
     });
 
     this.formError.set('');
@@ -233,9 +246,20 @@ export class Usuarios implements OnInit {
     return selectedRole?.nombre.toLowerCase().includes('medico') || selectedRole?.nombre.toLowerCase().includes('médico') || false;
   }
 
+  isFarmaceuticoRole(roleId: number | null): boolean {
+    if (!roleId) return false;
+    const selectedRole = this.roles().find(r => r.id === roleId);
+    return selectedRole?.nombre.toLowerCase().includes('farmaceutico') || selectedRole?.nombre.toLowerCase().includes('farmacéutico') || false;
+  }
+
   get isMedicoSelected(): boolean {
     const roleId = this.userForm.get('rolId')?.value;
     return this.isMedicoRole(Number(roleId));
+  }
+
+  get isFarmaceuticoSelected(): boolean {
+    const roleId = this.userForm.get('rolId')?.value;
+    return this.isFarmaceuticoRole(Number(roleId));
   }
 
   onSubmitUser() {
@@ -270,6 +294,12 @@ export class Usuarios implements OnInit {
       dto.detallesMedico = {
         numeroColegiatura: formValue.numeroColegiatura!,
         especialidadId: Number(formValue.especialidadId!)
+      };
+    }
+
+    if (this.isFarmaceuticoSelected) {
+      dto.detallesFarmaceutico = {
+        numeroColegiatura: formValue.numeroColegiaturaFarmaceutico!
       };
     }
 

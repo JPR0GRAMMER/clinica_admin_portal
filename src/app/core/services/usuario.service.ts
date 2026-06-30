@@ -8,6 +8,10 @@ export interface DetallesMedico {
   especialidadNombre: string;
 }
 
+export interface DetallesFarmaceutico {
+  numeroColegiatura: string;
+}
+
 export interface UsuarioResponse {
   id: number;
   nombre: string;
@@ -16,11 +20,16 @@ export interface UsuarioResponse {
   rolNombre: string;
   estado: number;
   detallesMedico?: DetallesMedico;
+  detallesFarmaceutico?: DetallesFarmaceutico;
 }
 
 export interface DetallesMedicoRegistro {
   numeroColegiatura: string;
   especialidadId: number;
+}
+
+export interface DetallesFarmaceuticoRegistro {
+  numeroColegiatura: string;
 }
 
 export interface UsuarioRegistroDto {
@@ -30,6 +39,7 @@ export interface UsuarioRegistroDto {
   contrasena: string;
   rolId: number;
   detallesMedico?: DetallesMedicoRegistro | null;
+  detallesFarmaceutico?: DetallesFarmaceuticoRegistro | null;
 }
 
 export interface UsuarioActualizarDto {
@@ -38,6 +48,7 @@ export interface UsuarioActualizarDto {
   correo: string;
   contrasena?: string;
   detallesMedico?: DetallesMedicoRegistro | null;
+  detallesFarmaceutico?: DetallesFarmaceuticoRegistro | null;
 }
 
 @Injectable({
