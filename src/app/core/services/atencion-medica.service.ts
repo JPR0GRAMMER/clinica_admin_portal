@@ -22,6 +22,7 @@ export interface DetalleRecetaDto {
   dosis: string;
   frecuencia: string;
   duracionTratamiento: string;
+  cantidadPrescrita: number;
 }
 
 export interface RecetaMedicaDto {
@@ -40,6 +41,7 @@ export interface DetalleRecetaResponseDto {
   dosis: string;
   frecuencia: string;
   duracionTratamiento: string;
+  cantidadPrescrita: number;
 }
 
 export interface RecetaResponseDto {

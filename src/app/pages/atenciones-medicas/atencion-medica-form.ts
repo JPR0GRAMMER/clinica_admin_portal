@@ -169,7 +169,8 @@ export class AtencionMedicaForm implements OnInit {
       medicamentoId: [null, [Validators.required]],
       dosis: ['', [Validators.required]],
       frecuencia: ['', [Validators.required]],
-      duracionTratamiento: ['', [Validators.required]]
+      duracionTratamiento: ['', [Validators.required]],
+      cantidadPrescrita: ['', [Validators.required, Validators.min(1)]]
     });
     this.detallesReceta.push(detalleForm);
     
@@ -283,7 +284,8 @@ export class AtencionMedicaForm implements OnInit {
           medicamentoId: Number(d.medicamentoId),
           dosis: d.dosis,
           frecuencia: d.frecuencia,
-          duracionTratamiento: d.duracionTratamiento
+          duracionTratamiento: d.duracionTratamiento,
+          cantidadPrescrita: Number(d.cantidadPrescrita)
         }))
       };
     }
