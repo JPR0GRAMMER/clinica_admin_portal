@@ -192,7 +192,6 @@
   font-weight: 500;
 }
 
-/* Dropdown Menu Styles */
 .dropdown-menu {
   position: absolute;
   top: 44px;
@@ -257,8 +256,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #0b1120; /* Color oscuro que combina con el panel */
-  color: white;
+  background-color: #0b1120;   color: white;
   font-size: 36px;
   font-weight: 600;
   letter-spacing: 2px;
@@ -311,7 +309,6 @@
   to { transform: rotate(360deg); }
 }
 
-/* Modal Styles */
 .modal-overlay {
   position: fixed;
   top: 0;

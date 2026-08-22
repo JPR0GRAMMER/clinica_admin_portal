@@ -10,7 +10,6 @@ function pastDateValidator(control: AbstractControl): ValidationErrors | null {
   const selectedDate = new Date(control.value);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  // Permitimos si la fecha es hoy o anterior. Si es mayor a hoy, es futuro.
   if (selectedDate > today) {
     return { futureDate: true };
   }
@@ -25,31 +24,26 @@ function pastDateValidator(control: AbstractControl): ValidationErrors | null {
   styleUrls: ['./pacientes.css']
 })
 export class Pacientes implements OnInit {
-  // Data State
   pacientes = signal<PacienteResponse[]>([]);
   isLoading = signal<boolean>(false);
   errorMessage = signal<string>('');
 
-  // Modal & Edit State
   showCreateModal = signal<boolean>(false);
   isSaving = signal<boolean>(false);
   formError = signal<string>('');
   errorTimer: any = null;
   editingPacienteId = signal<number | null>(null);
 
-  // Confirm Modal State
   showConfirmModal = signal<boolean>(false);
   confirmAction = signal<'deshabilitar' | 'habilitar' | null>(null);
   selectedPaciente = signal<PacienteResponse | null>(null);
 
-  // Dropdown State
   activeDropdownIndex = signal<number | null>(null);
 
-  // Form
   pacienteForm = new FormGroup({
     documentoIdentidad: new FormControl('', [
-      Validators.required, 
-      Validators.minLength(8), 
+      Validators.required,
+      Validators.minLength(8),
       Validators.maxLength(8),
       Validators.pattern('^[0-9]+$')
     ]),
@@ -65,7 +59,6 @@ export class Pacientes implements OnInit {
   ngOnInit() {
     this.loadPacientes();
 
-    // Cerrar dropdown al hacer clic fuera
     document.addEventListener('click', () => {
       this.activeDropdownIndex.set(null);
     });
@@ -100,11 +93,11 @@ export class Pacientes implements OnInit {
   executeConfirmAction() {
     const action = this.confirmAction();
     const paciente = this.selectedPaciente();
-    
+
     if (!action || !paciente) return;
 
     this.isSaving.set(true);
-    
+
     if (action === 'deshabilitar') {
       this.pacienteService.deshabilitarPaciente(paciente.id).subscribe(() => {
         this.isSaving.set(false);
@@ -174,7 +167,7 @@ export class Pacientes implements OnInit {
     };
 
     const id = this.editingPacienteId();
-    const request$ = id 
+    const request$ = id
       ? this.pacienteService.actualizarPaciente(id, dto)
       : this.pacienteService.crearPaciente(dto);
 
@@ -182,7 +175,7 @@ export class Pacientes implements OnInit {
       next: () => {
         this.isSaving.set(false);
         this.closeCreateModal();
-        this.loadPacientes(); // Recargar grilla
+        this.loadPacientes();
       },
       error: (err) => {
         console.error('Error guardando paciente:', err);

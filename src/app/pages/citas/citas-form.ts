@@ -27,35 +27,32 @@ export class CitasForm implements OnInit {
   pacientes = signal<PacienteResponse[]>([]);
   especialidades = signal<EspecialidadResponse[]>([]);
   horariosMedico = signal<HorarioMedicoResponse[]>([]);
-  
-  // Data for the visual grid
+
   doctorBlocks = signal<DoctorBlock[]>([]);
-  
+
   isLoading = signal<boolean>(true);
   isFetchingHorarios = signal<boolean>(false);
   isSaving = signal<boolean>(false);
   formError = signal<string>('');
   errorTimer: any = null;
-  
-  // Custom Select State
+
   isPacienteDropdownOpen = signal<boolean>(false);
   pacienteSearchQuery = signal<string>('');
-  
+
   filteredPacientes = computed(() => {
     const query = this.pacienteSearchQuery().toLowerCase().trim();
     if (!query) return this.pacientes();
-    
+
     return this.pacientes().filter(p => {
       const nombreCompleto = `${p.nombre} ${p.apellido}`.toLowerCase();
       return nombreCompleto.includes(query) || p.documentoIdentidad.includes(query);
     });
   });
-  
-  // Para bloquear fechas anteriores a hoy
+
   minDate = signal<string>('');
-  
+
   citaId = signal<number | null>(null);
-  citasOcupadasDelDia = signal<CitaResponse[]>([]); // Para validar ocupación sin cargar todas las citas
+  citasOcupadasDelDia = signal<CitaResponse[]>([]);
 
   citaForm = new FormGroup({
     pacienteId: new FormControl<number | null>(null, [Validators.required]),
@@ -84,16 +81,13 @@ export class CitasForm implements OnInit {
   }
 
   ngOnInit() {
-    // Configurar minDate para no permitir seleccionar fechas anteriores a hoy en el HTML
     const today = new Date();
-    // Ajuste a la zona horaria local para evitar problemas con UTC
     const offset = today.getTimezoneOffset();
     const localToday = new Date(today.getTime() - (offset * 60 * 1000));
     this.minDate.set(localToday.toISOString().split('T')[0]);
 
     this.loadInitialData();
 
-    // Comprobar si estamos en modo edición
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
       if (id) {
@@ -104,13 +98,12 @@ export class CitasForm implements OnInit {
       }
     });
 
-    // Reactividad: Si cambia la especialidad
     this.citaForm.get('especialidadId')?.valueChanges.subscribe(especialidadId => {
       if (!this.isLoading()) {
         this.citaForm.patchValue({ medicoId: null, horaCita: '' }, { emitEvent: false });
       }
       this.doctorBlocks.set([]);
-      
+
       if (especialidadId) {
         this.isFetchingHorarios.set(true);
         this.horarioMedicoService.listarPorEspecialidad(Number(especialidadId)).subscribe({
@@ -125,7 +118,6 @@ export class CitasForm implements OnInit {
       }
     });
 
-    // Reactividad: Si cambia la fecha
     this.citaForm.get('fechaCita')?.valueChanges.subscribe(() => {
       if (!this.isLoading()) {
         this.citaForm.patchValue({ medicoId: null, horaCita: '' }, { emitEvent: false });
@@ -149,20 +141,16 @@ export class CitasForm implements OnInit {
 
   loadCitaToEdit(id: number) {
     this.isLoading.set(true);
-    // Para simplificar, listamos todas las citas y buscamos la nuestra
     this.citaService.listarCitas().subscribe({
       next: (citas) => {
         const cita = citas.find(c => c.id === id);
         if (cita) {
-          // Buscamos la especialidad
           this.medicoService.listarMedicos().subscribe({
             next: (medicos) => {
               const medico = medicos.find(m => m.id === cita.medicoId);
               const especialidadObj = this.especialidades().find(e => e.nombre === medico?.especialidad);
-              
+
               if (especialidadObj) {
-                // Prevenimos que valueChanges se disparen usando emitEvent: false
-                // Esto evita el parpadeo de grilla vacía
                 this.citaForm.patchValue({
                   pacienteId: cita.pacienteId,
                   especialidadId: especialidadObj.id,
@@ -170,14 +158,13 @@ export class CitasForm implements OnInit {
                   medicoId: cita.medicoId,
                   horaCita: cita.horaCita.substring(0, 5)
                 }, { emitEvent: false });
-                
-                // Cargamos los horarios manualmente para sincronizar perfectamente la UI
+
                 this.isFetchingHorarios.set(true);
                 this.horarioMedicoService.listarPorEspecialidad(especialidadObj.id).subscribe({
                   next: (horarios) => {
                     this.horariosMedico.set(horarios);
                     this.calculateDoctorBlocks();
-                    this.isLoading.set(false); // Solo mostramos la UI cuando los doctores ya están procesados
+                    this.isLoading.set(false);
                   },
                   error: () => {
                     this.isFetchingHorarios.set(false);
@@ -209,31 +196,27 @@ export class CitasForm implements OnInit {
       return;
     }
 
-    // Calcular día de la semana (Lunes=1, Domingo=7)
     const dateObj = new Date(fecha);
     if (isNaN(dateObj.getTime())) {
       this.isFetchingHorarios.set(false);
       return;
     }
-    
+
     let diaSemana = dateObj.getUTCDay();
     if (diaSemana === 0) diaSemana = 7;
 
-    // Filtrar los horarios
     const horariosDelDia = this.horariosMedico().filter(h => h.diaSemana === diaSemana);
-    
+
     if (horariosDelDia.length === 0) {
       this.doctorBlocks.set([]);
       this.isFetchingHorarios.set(false);
       return;
     }
 
-    // Para evitar falsos positivos con otras citas, necesitamos cargar las citas del día.
     this.citaService.listarCitas().subscribe({
       next: (citas) => {
         const newBlocks: DoctorBlock[] = [];
-        
-        // Determinar si la fecha seleccionada es hoy para filtrar horas pasadas
+
         const now = new Date();
         const selectedDateStr = fecha;
         const offset = now.getTimezoneOffset();
@@ -247,9 +230,9 @@ export class CitasForm implements OnInit {
           const startHour = parseInt(horario.horaInicio.split(':')[0], 10);
           const endHour = parseInt(horario.horaFin.split(':')[0], 10);
 
-          const citasOcupadas = citas.filter(c => 
-            c.medicoId === horario.medicoId && 
-            c.fechaCita === fecha && 
+          const citasOcupadas = citas.filter(c =>
+            c.medicoId === horario.medicoId &&
+            c.fechaCita === fecha &&
             c.estadoCita !== 'Cancelada' &&
             c.estadoCita !== 'No Asistió' &&
             c.id !== this.citaId()
@@ -259,7 +242,6 @@ export class CitasForm implements OnInit {
           const bloques = [];
 
           for (let i = startHour; i < endHour; i++) {
-            // Si la fecha es hoy, y la hora del bloque ya pasó (o está pasando), no se agrega
             if (isToday && i <= currentDecimalHour) {
               continue;
             }
@@ -269,7 +251,6 @@ export class CitasForm implements OnInit {
             bloques.push({ hora: horaStr, ocupado: isOccupied });
           }
 
-          // Solo agregamos al doctor si le quedan bloques disponibles
           if (bloques.length > 0) {
             newBlocks.push({
               medicoId: horario.medicoId,

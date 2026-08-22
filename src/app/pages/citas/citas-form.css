@@ -71,7 +71,6 @@
   box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
 }
 
-/* Custom Select Dropdown UI */
 .custom-select-container {
   position: relative;
   width: 100%;
@@ -194,7 +193,6 @@
   font-weight: normal;
 }
 
-/* Horarios Inteligentes UI */
 .horarios-section {
   margin-top: 32px;
   padding-top: 32px;
@@ -329,7 +327,6 @@
   font-weight: 500;
 }
 
-/* Botones comunes */
 .btn-primary {
   background-color: #0b1120;
   color: white;
@@ -398,7 +395,6 @@
   to { transform: rotate(360deg); }
 }
 
-/* Progress bar styles */
 .section-header {
   display: flex;
   justify-content: space-between;

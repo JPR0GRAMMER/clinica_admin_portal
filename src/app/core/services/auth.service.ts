@@ -73,7 +73,7 @@ export class AuthService {
       const payloadBase64Url = token.split('.')[1];
       const payloadBase64 = payloadBase64Url.replace(/-/g, '+').replace(/_/g, '/');
       const payload = JSON.parse(window.atob(payloadBase64));
-      return payload.sub; // Asumiendo que el Subject del JWT es el correo
+      return payload.sub;
     } catch (e) {
       return null;
     }

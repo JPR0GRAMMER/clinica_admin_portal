@@ -167,7 +167,6 @@
   color: #64748b;
 }
 
-/* Side Panel */
 .actions-card {
   background: white;
   border-radius: 12px;
@@ -230,7 +229,6 @@
   font-size: 1.2rem;
 }
 
-/* Utilities */
 .alert-danger {
   background: rgba(239, 68, 68, 0.1);
   color: #ef4444;

@@ -24,12 +24,10 @@ export class AtencionMedicaForm implements OnInit {
   errorTimer: any = null;
 
   citas = signal<CitaResponse[]>([]);
-  
-  // Toggles Opcionales
+
   incluyeReceta = signal<boolean>(false);
   incluyeProcedimiento = signal<boolean>(false);
 
-  // CIE-10 Custom Select
   allCie10Results = signal<Cie10Response[]>([]);
   isCie10DropdownOpen = signal<boolean>(false);
   cie10SearchQuery = signal<string>('');
@@ -37,12 +35,11 @@ export class AtencionMedicaForm implements OnInit {
   isSearchingCie10 = signal<boolean>(false);
   selectedCie10 = signal<Cie10Response | null>(null);
 
-  // Medicamento Custom Selects (Múltiples)
   medicamentosDisponibles = signal<Medicamento[]>([]);
   medicamentosBusqueda = signal<Medicamento[]>([]);
-  isMedicamentoDropdownOpen = signal<boolean[]>([]); // Array para controlar qué dropdown está abierto
-  medicamentoSearchQuery = signal<string[]>([]); // Arrays para las queries
-  selectedMedicamentos = signal<(Medicamento | null)[]>([]); // Medicamentos seleccionados por index
+  isMedicamentoDropdownOpen = signal<boolean[]>([]);
+  medicamentoSearchQuery = signal<string[]>([]);
+  selectedMedicamentos = signal<(Medicamento | null)[]>([]);
 
   atencionForm!: FormGroup;
 
@@ -62,7 +59,6 @@ export class AtencionMedicaForm implements OnInit {
   clickOut(event: Event) {
     if (!this.eRef.nativeElement.contains(event.target)) {
       this.isCie10DropdownOpen.set(false);
-      // Cerrar todos los dropdowns de medicamentos
       const drops = this.isMedicamentoDropdownOpen().map(() => false);
       this.isMedicamentoDropdownOpen.set(drops);
     }
@@ -74,7 +70,6 @@ export class AtencionMedicaForm implements OnInit {
       motivoConsulta: ['', [Validators.required]],
       diagnostico: ['', [Validators.required, Validators.maxLength(255)]],
       codigoCie10: ['', [Validators.required]],
-      // Opcionales
       receta: this.fb.group({
         indicacionesGenerales: ['', [Validators.required]],
         detalles: this.fb.array([])
@@ -84,8 +79,7 @@ export class AtencionMedicaForm implements OnInit {
         resultado: ['', [Validators.required]]
       })
     });
-    
-    // Por defecto, deshabilitamos las secciones opcionales para que no fallen las validaciones si no se usan
+
     this.atencionForm.get('receta')?.disable();
     this.atencionForm.get('procedimiento')?.disable();
   }
@@ -95,10 +89,9 @@ export class AtencionMedicaForm implements OnInit {
   }
 
   ngOnInit() {
-    // Cargar citas
     this.citaService.listarCitas().subscribe({
       next: (data) => {
-        const pendientes = data.filter(c => 
+        const pendientes = data.filter(c =>
           c.estadoCita === 'Confirmada' || c.estadoCita === 'Reprogramada'
         );
         this.citas.set(pendientes);
@@ -106,7 +99,6 @@ export class AtencionMedicaForm implements OnInit {
       error: () => {}
     });
 
-    // Cargar Catálogo de Medicamentos
     this.medicamentoService.buscarMedicamentos().subscribe({
       next: (data) => {
         this.medicamentosDisponibles.set(data);
@@ -115,12 +107,11 @@ export class AtencionMedicaForm implements OnInit {
       error: () => {}
     });
 
-    // Cargar Catálogo CIE-10
     this.isSearchingCie10.set(true);
     this.cie10Service.listarTodos().subscribe({
       next: (data) => {
         this.allCie10Results.set(data);
-        this.cie10Results.set(data.slice(0, 100)); // Mostrar primeros 100 por defecto
+        this.cie10Results.set(data.slice(0, 100));
         this.isSearchingCie10.set(false);
         this.isLoading.set(false);
       },
@@ -139,14 +130,13 @@ export class AtencionMedicaForm implements OnInit {
     }
   }
 
-  // Toggles Opcionales
   toggleReceta() {
     const val = !this.incluyeReceta();
     this.incluyeReceta.set(val);
     if (val) {
       this.atencionForm.get('receta')?.enable();
       if (this.detallesReceta.length === 0) {
-        this.addMedicamento(); // Añadir uno por defecto
+        this.addMedicamento();
       }
     } else {
       this.atencionForm.get('receta')?.disable();
@@ -163,7 +153,6 @@ export class AtencionMedicaForm implements OnInit {
     }
   }
 
-  // Detalles Receta (Dynamic Array)
   addMedicamento() {
     const detalleForm = this.fb.group({
       medicamentoId: [null, [Validators.required]],
@@ -173,8 +162,7 @@ export class AtencionMedicaForm implements OnInit {
       cantidadPrescrita: ['', [Validators.required, Validators.min(1)]]
     });
     this.detallesReceta.push(detalleForm);
-    
-    // Arrays para los selects custom
+
     this.isMedicamentoDropdownOpen.update(v => [...v, false]);
     this.medicamentoSearchQuery.update(v => [...v, '']);
     this.selectedMedicamentos.update(v => [...v, null]);
@@ -187,7 +175,6 @@ export class AtencionMedicaForm implements OnInit {
     this.selectedMedicamentos.update(v => { const n = [...v]; n.splice(index, 1); return n; });
   }
 
-  // CIE-10 Search Logic
   toggleCie10Dropdown() {
     this.isCie10DropdownOpen.set(!this.isCie10DropdownOpen());
     if (this.isCie10DropdownOpen() && this.cie10SearchQuery().trim() === '') {
@@ -199,12 +186,12 @@ export class AtencionMedicaForm implements OnInit {
     const input = event.target as HTMLInputElement;
     const term = input.value.toLowerCase().trim();
     this.cie10SearchQuery.set(term);
-    
+
     if (term === '') {
       this.cie10Results.set(this.allCie10Results().slice(0, 100));
     } else {
-      const filtrados = this.allCie10Results().filter(c => 
-        c.codigo.toLowerCase().includes(term) || 
+      const filtrados = this.allCie10Results().filter(c =>
+        c.codigo.toLowerCase().includes(term) ||
         c.descripcion.toLowerCase().includes(term)
       ).slice(0, 100);
       this.cie10Results.set(filtrados);
@@ -218,11 +205,10 @@ export class AtencionMedicaForm implements OnInit {
     this.isCie10DropdownOpen.set(false);
   }
 
-  // Medicamentos Search Logic
   toggleMedicamentoDropdown(index: number, event: Event) {
     event.stopPropagation();
     const current = this.isMedicamentoDropdownOpen()[index];
-    const n = this.isMedicamentoDropdownOpen().map(() => false); // Cerrar todos
+    const n = this.isMedicamentoDropdownOpen().map(() => false);
     n[index] = !current;
     this.isMedicamentoDropdownOpen.set(n);
   }
@@ -230,14 +216,14 @@ export class AtencionMedicaForm implements OnInit {
   onSearchMedicamento(index: number, event: Event) {
     const input = event.target as HTMLInputElement;
     const term = input.value.toLowerCase().trim();
-    
+
     this.medicamentoSearchQuery.update(v => { const n = [...v]; n[index] = term; return n; });
-    
+
     if (term === '') {
       this.medicamentosBusqueda.set(this.medicamentosDisponibles().slice(0, 50));
     } else {
-      const filtrados = this.medicamentosDisponibles().filter(m => 
-        m.nombreComercial.toLowerCase().includes(term) || 
+      const filtrados = this.medicamentosDisponibles().filter(m =>
+        m.nombreComercial.toLowerCase().includes(term) ||
         m.principioActivo.toLowerCase().includes(term) ||
         m.codigo.toLowerCase().includes(term)
       ).slice(0, 50);
@@ -247,12 +233,11 @@ export class AtencionMedicaForm implements OnInit {
 
   selectMedicamento(index: number, item: Medicamento) {
     this.selectedMedicamentos.update(v => { const n = [...v]; n[index] = item; return n; });
-    
-    // Update FormGroup
+
     const control = this.detallesReceta.at(index);
     control.patchValue({ medicamentoId: item.id });
     control.get('medicamentoId')?.markAsTouched();
-    
+
     const n = [...this.isMedicamentoDropdownOpen()];
     n[index] = false;
     this.isMedicamentoDropdownOpen.set(n);

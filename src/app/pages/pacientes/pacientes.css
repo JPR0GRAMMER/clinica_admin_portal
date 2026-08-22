@@ -43,8 +43,7 @@
   background: white;
   border-radius: 16px;
   padding: 24px;
-  padding-bottom: 120px; /* Espacio extra para que el dropdown no se corte */
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  padding-bottom: 120px;   box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
 }
 
 .modern-table {
@@ -221,7 +220,6 @@
   font-weight: 500;
 }
 
-/* Modal Styles */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -396,7 +394,6 @@
   flex-shrink: 0;
 }
 
-/* Dropdown Menu Styles */
 .actions-cell {
   position: relative;
   width: 50px;
@@ -474,7 +471,6 @@
   height: 16px;
 }
 
-/* Confirm Modal Styles */
 .confirm-modal {
   max-width: 400px;
   padding: 32px 24px;

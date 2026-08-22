@@ -34,10 +34,10 @@ export class LoginComponent {
   onSubmit() {
     if (this.loginForm.valid) {
       const { email, password } = this.loginForm.value;
-      
+
       this.isLoading.set(true);
       this.errorMessage.set('');
-      
+
       this.authService.login({ correo: email!, contrasena: password! }).subscribe({
         next: () => {
           this.isLoading.set(false);

@@ -1,11 +1,11 @@
 import { Component, OnInit, AfterViewInit, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';  // ← AGREGAR ESTA LÍNEA
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterLink],  // ← aAGREGAR RouterLink AQUÍ
+  imports: [CommonModule, RouterLink],
   templateUrl: './home.html',
   styleUrls: ['./home.css'],
   encapsulation: ViewEncapsulation.None

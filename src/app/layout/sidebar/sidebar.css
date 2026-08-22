@@ -18,7 +18,6 @@
   box-shadow: 10px 0 25px -5px rgba(0, 0, 0, 0.15);
 }
 
-/* Curva superior cóncava */
 .sidebar::before {
   content: "";
   position: absolute;
@@ -30,7 +29,6 @@
   pointer-events: none;
 }
 
-/* Curva inferior cóncava */
 .sidebar::after {
   content: "";
   position: absolute;
@@ -87,7 +85,6 @@
   border-radius: 0 4px 4px 0;
 }
 
-/* Custom Tooltip */
 .nav-item[data-tooltip]::after {
   content: attr(data-tooltip);
   position: absolute;

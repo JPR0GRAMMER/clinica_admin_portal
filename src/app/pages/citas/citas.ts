@@ -16,13 +16,11 @@ export class Citas implements OnInit {
   isLoading = signal<boolean>(true);
   isSaving = signal<boolean>(false);
   userRole = signal<string>('');
-  
-  // Status Action Modal State
+
   showStatusModal = signal<boolean>(false);
   statusAction = signal<string | null>(null);
   selectedCita = signal<CitaResponse | null>(null);
 
-  // Dropdown
   activeDropdownIndex = signal<number | null>(null);
 
   constructor(private citaService: CitaService, private authService: AuthService) {}
@@ -72,11 +70,11 @@ export class Citas implements OnInit {
   executeStatusAction() {
     const action = this.statusAction();
     const cita = this.selectedCita();
-    
+
     if (!action || !cita) return;
 
     this.isSaving.set(true);
-    
+
     this.citaService.cambiarEstado(cita.id, action).subscribe({
       next: () => {
         this.isSaving.set(false);

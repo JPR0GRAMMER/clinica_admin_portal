@@ -97,7 +97,6 @@
   margin-top: 0.25rem;
 }
 
-/* Custom Select Dropdown UI */
 .custom-select-container {
   position: relative;
   width: 100%;
@@ -222,7 +221,6 @@
   font-weight: normal;
 }
 
-/* Actions */
 .form-actions {
   display: flex;
   justify-content: flex-end;
@@ -328,7 +326,6 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* --- Optional Sections --- */
 .section-divider {
   border: none;
   border-top: 1px solid var(--border-color);
@@ -401,7 +398,6 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* --- Dynamic Array (Medicamentos) --- */
 .medicamentos-list {
   display: flex;
   flex-direction: column;

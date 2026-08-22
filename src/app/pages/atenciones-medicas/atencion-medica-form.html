@@ -18,8 +18,7 @@
   } @else {
     <div class="form-card">
       <form [formGroup]="atencionForm" (ngSubmit)="onSubmit()">
-        <!-- SECCIÓN 1: DATOS BÁSICOS -->
-        <h3 class="section-title">Datos Clínicos Básicos</h3>
+                <h3 class="section-title">Datos Clínicos Básicos</h3>
         <div class="form-grid">
           <div class="form-group full-width">
             <label>Seleccionar Cita Pendiente</label>
@@ -85,8 +84,7 @@
 
         <hr class="section-divider">
 
-        <!-- SECCIÓN 2: PROCEDIMIENTO (OPCIONAL) -->
-        <div class="optional-toggle-container">
+                <div class="optional-toggle-container">
           <button type="button" class="btn-toggle" [ngClass]="{'active': incluyeProcedimiento()}" (click)="toggleProcedimiento()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
             {{ incluyeProcedimiento() ? 'Quitar Procedimiento' : 'Añadir Procedimiento' }}
@@ -110,8 +108,7 @@
           </div>
         }
 
-        <!-- SECCIÓN 3: RECETA MÉDICA (OPCIONAL) -->
-        <div class="optional-toggle-container">
+                <div class="optional-toggle-container">
           <button type="button" class="btn-toggle" [ngClass]="{'active': incluyeReceta()}" (click)="toggleReceta()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
             {{ incluyeReceta() ? 'Quitar Receta Médica' : 'Añadir Receta Médica' }}

@@ -7,9 +7,9 @@ export interface HorarioMedicoResponse {
   id: number;
   medicoId: number;
   medicoNombreCompleto: string;
-  diaSemana: number; // 1 = Lunes, 7 = Domingo (en Java LocalDate)
-  horaInicio: string; // Formato HH:mm:ss
-  horaFin: string; // Formato HH:mm:ss
+  diaSemana: number;
+  horaInicio: string;
+  horaFin: string;
 }
 
 @Injectable({

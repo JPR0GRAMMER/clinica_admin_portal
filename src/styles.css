@@ -12,7 +12,6 @@ body {
   color: #1e293b;
 }
 
-/* Base styles for scrollbars */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;

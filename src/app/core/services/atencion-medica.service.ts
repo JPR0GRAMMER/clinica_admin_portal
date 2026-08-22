@@ -64,7 +64,7 @@ export interface AtencionMedicaResponseDto {
   motivoConsulta: string;
   diagnostico: string;
   cie10: Cie10Dto;
-  fechaAtencion: string; // ISO String
+  fechaAtencion: string;
   recetas?: RecetaResponseDto[];
   procedimientos?: ProcedimientoResponseDto[];
 }

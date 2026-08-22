@@ -20,26 +20,23 @@ export class Usuarios implements OnInit {
   isLoading = signal<boolean>(true);
   errorMessage = signal<string>('');
 
-  // Modal State
   showCreateModal = signal<boolean>(false);
   isSaving = signal<boolean>(false);
   formError = signal<string>('');
   errorTimer: any = null;
   editingUserId = signal<number | null>(null);
   changePasswordMode = signal<'si' | 'no'>('no');
-  
-  // Catalogs
+
   roles = signal<Rol[]>([]);
   especialidades = signal<Especialidad[]>([]);
 
-  // Form
   userForm = new FormGroup({
     nombre: new FormControl('', [Validators.required]),
     apellido: new FormControl('', [Validators.required]),
     correo: new FormControl('', [Validators.required, Validators.email]),
     contrasena: new FormControl('', [
-      Validators.required, 
-      Validators.minLength(8), 
+      Validators.required,
+      Validators.minLength(8),
       Validators.pattern(/^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/)
     ]),
     rolId: new FormControl<number | null>(null, [Validators.required]),
@@ -53,7 +50,6 @@ export class Usuarios implements OnInit {
     private catalogoService: CatalogoService,
     private authService: AuthService
   ) {
-    // Dynamic validation for Medico and Farmaceutico roles
     this.userForm.get('rolId')?.valueChanges.subscribe(roleId => {
       const isMedico = this.isMedicoRole(Number(roleId));
       const isFarmaceutico = this.isFarmaceuticoRole(Number(roleId));
@@ -100,10 +96,10 @@ export class Usuarios implements OnInit {
     this.usuarioService.listarUsuarios().subscribe({
       next: (data) => {
         const currentUserEmail = this.authService.getCurrentUserEmail();
-        const filteredUsers = currentUserEmail 
+        const filteredUsers = currentUserEmail
           ? data.filter(u => u.correo !== currentUserEmail)
           : data;
-        
+
         this.users.set(filteredUsers);
         this.isLoading.set(false);
       },
@@ -156,17 +152,15 @@ export class Usuarios implements OnInit {
     return `${nombre?.charAt(0) || ''}${apellido?.charAt(0) || ''}`.toUpperCase() || 'U';
   }
 
-  // Modal and Form Methods
   openCreateModal() {
     this.editingUserId.set(null);
-    this.changePasswordMode.set('si'); // Para crear, siempre debe haber contraseña
+    this.changePasswordMode.set('si');
     this.userForm.reset();
     this.userForm.get('rolId')?.enable();
-    
-    // Restaurar validador de contraseña obligatoria para creación
+
     this.userForm.get('contrasena')?.setValidators([
-      Validators.required, 
-      Validators.minLength(8), 
+      Validators.required,
+      Validators.minLength(8),
       Validators.pattern(/^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/)
     ]);
     this.userForm.get('contrasena')?.updateValueAndValidity();
@@ -189,8 +183,8 @@ export class Usuarios implements OnInit {
     const pwdCtrl = this.userForm.get('contrasena');
     if (mode === 'si') {
       pwdCtrl?.setValidators([
-        Validators.required, 
-        Validators.minLength(8), 
+        Validators.required,
+        Validators.minLength(8),
         Validators.pattern(/^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/)
       ]);
     } else {
@@ -203,15 +197,12 @@ export class Usuarios implements OnInit {
     this.editingUserId.set(user.id);
     this.changePasswordMode.set('no');
     this.userForm.reset();
-    
-    // Buscar el rol correspondiente
+
     const rol = this.roles().find(r => r.nombre.toLowerCase() === user.rolNombre.toLowerCase());
-    
-    // Por defecto en edición, la contraseña no se evalúa
+
     this.userForm.get('contrasena')?.clearValidators();
     this.userForm.get('contrasena')?.updateValueAndValidity();
 
-    // Bloquear el rol porque no se puede cambiar
     this.userForm.get('rolId')?.disable();
 
     let especialidadId: number | null = null;
@@ -271,9 +262,8 @@ export class Usuarios implements OnInit {
     this.isSaving.set(true);
     this.formError.set('');
     if (this.errorTimer) clearTimeout(this.errorTimer);
-    // Al usar getRawValue obtenemos valores de campos disabled también (como rolId)
     const formValue = this.userForm.getRawValue();
-    
+
     const isEdit = this.editingUserId() !== null;
 
     let dto: any = {
@@ -303,7 +293,7 @@ export class Usuarios implements OnInit {
       };
     }
 
-    const request$ = isEdit 
+    const request$ = isEdit
       ? this.usuarioService.actualizarUsuario(this.editingUserId()!, dto as UsuarioActualizarDto)
       : this.usuarioService.registrarUsuario(dto as UsuarioRegistroDto);
 
