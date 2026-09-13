@@ -1,0 +1,72 @@
+<div class="page-header">
+  <div>
+    <div class="breadcrumb"><span>Gestión Clínica</span><span>›</span><span class="current">Horarios médicos</span></div>
+    
+  </div>
+  <button class="btn-primary" (click)="openCreateModal()">Nuevo horario</button>
+</div>
+
+<div class="filters-card">
+  <div class="form-group">
+    <label for="medico-filter">Médico</label>
+    <select id="medico-filter" (change)="onMedicoFilter($any($event.target).value)">
+      <option value="">Todos los médicos</option>
+      @for (medico of medicos(); track medico.id) {
+        <option [value]="medico.id">{{ getMedicoNombre(medico) }} — {{ medico.especialidad }}</option>
+      }
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="dia-filter">Día</label>
+    <select id="dia-filter" (change)="onDiaFilter($any($event.target).value)">
+      <option value="">Todos los días</option>
+      @for (dia of diasSemana; track dia.id) { <option [value]="dia.id">{{ dia.nombre }}</option> }
+    </select>
+  </div>
+</div>
+
+@if (isLoading()) {
+  <div class="state"><span class="spinner"></span><p>Cargando horarios médicos...</p></div>
+} @else if (errorMessage()) {
+  <div class="state error"><p>{{ errorMessage() }}</p><button class="btn-primary" (click)="loadData()">Reintentar</button></div>
+} @else if (horariosFiltrados.length === 0) {
+  <div class="state"><p>No hay horarios que coincidan con los filtros.</p></div>
+} @else {
+  <div class="table-card">
+    <table>
+      <thead><tr><th>Médico</th><th>Especialidad</th><th>Día</th><th>Horario</th><th></th></tr></thead>
+      <tbody>
+        @for (horario of horariosFiltrados; track horario.id) {
+          <tr>
+            <td>{{ horario.medicoNombreCompleto }}</td>
+            <td>{{ medicos().find(m => m.id === horario.medicoId)?.especialidad || '—' }}</td>
+            <td><span class="day-badge">{{ getDiaNombre(horario.diaSemana) }}</span></td>
+            <td>{{ formatTime(horario.horaInicio) }} – {{ formatTime(horario.horaFin) }}</td>
+            <td class="actions"><button class="btn-icon" title="Editar" (click)="openEditModal(horario)">Editar</button><button class="btn-icon danger" title="Eliminar" (click)="openDeleteModal(horario)">Eliminar</button></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+@if (showFormModal()) {
+  <div class="modal-overlay" (click)="closeFormModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header"><h2>{{ editingHorario() ? 'Editar horario médico' : 'Nuevo horario médico' }}</h2><button class="close" (click)="closeFormModal()">×</button></div>
+      <form [formGroup]="horarioForm" (ngSubmit)="saveHorario()">
+        <div class="modal-body">
+          @if (formError()) { <div class="form-error">{{ formError() }}</div> }
+          <div class="form-group"><label for="medicoId">Médico</label><select id="medicoId" formControlName="medicoId"><option [ngValue]="null" disabled>Selecciona un médico</option>@for (medico of medicos(); track medico.id) { <option [ngValue]="medico.id">{{ getMedicoNombre(medico) }} — {{ medico.especialidad }}</option> }</select>@if (horarioForm.get('medicoId')?.touched && horarioForm.get('medicoId')?.invalid) { <small>Selecciona un médico.</small> }</div>
+          <div class="form-group"><label for="diaSemana">Día de la semana</label><select id="diaSemana" formControlName="diaSemana"><option [ngValue]="null" disabled>Selecciona un día</option>@for (dia of diasSemana; track dia.id) { <option [ngValue]="dia.id">{{ dia.nombre }}</option> }</select>@if (horarioForm.get('diaSemana')?.touched && horarioForm.get('diaSemana')?.invalid) { <small>Selecciona un día.</small> }</div>
+          <div class="time-row"><div class="form-group"><label for="horaInicio">Hora de inicio</label><input id="horaInicio" type="time" formControlName="horaInicio">@if (horarioForm.get('horaInicio')?.touched && horarioForm.get('horaInicio')?.invalid) { <small>La hora es obligatoria.</small> }</div><div class="form-group"><label for="horaFin">Hora de fin</label><input id="horaFin" type="time" formControlName="horaFin">@if (horarioForm.get('horaFin')?.touched && horarioForm.get('horaFin')?.invalid) { <small>La hora es obligatoria.</small> }</div></div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn-secondary" (click)="closeFormModal()">Cancelar</button><button type="submit" class="btn-primary" [disabled]="isSaving()">{{ isSaving() ? 'Guardando...' : (editingHorario() ? 'Guardar cambios' : 'Crear horario') }}</button></div>
+      </form>
+    </div>
+  </div>
+}
+
+@if (showDeleteModal() && selectedHorario(); as horario) {
+  <div class="modal-overlay" (click)="closeDeleteModal()"><div class="modal-content compact" (click)="$event.stopPropagation()"><div class="modal-header"><h2>Eliminar horario</h2><button class="close" (click)="closeDeleteModal()">×</button></div><div class="modal-body"><p>¿Deseas eliminar el horario de <strong>{{ horario.medicoNombreCompleto }}</strong> del día {{ getDiaNombre(horario.diaSemana) }}?</p></div><div class="modal-footer"><button class="btn-secondary" (click)="closeDeleteModal()">Cancelar</button><button class="btn-danger" [disabled]="isSaving()" (click)="deleteHorario()">{{ isSaving() ? 'Eliminando...' : 'Eliminar' }}</button></div></div></div>
+}

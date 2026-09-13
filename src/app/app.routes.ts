@@ -15,6 +15,7 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: 'usuarios', component: Usuarios },
+      { path: 'horarios-medicos', loadComponent: () => import('./pages/horarios-medicos/horarios-medicos').then(m => m.HorariosMedicos) },
       { path: 'pacientes', component: Pacientes },
       { path: 'citas', loadComponent: () => import('./pages/citas/citas').then(m => m.Citas) },
       { path: 'citas/agendar', loadComponent: () => import('./pages/citas/citas-form').then(m => m.CitasForm) },
