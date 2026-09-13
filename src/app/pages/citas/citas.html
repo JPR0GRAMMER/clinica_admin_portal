@@ -30,7 +30,7 @@
             <th>Médico</th>
             <th>Especialidad</th>
             <th>Estado</th>
-            @if (userRole() !== 'MEDICO') { <th></th> }
+            @if (userRole() === 'MEDICO') { <th>Historial</th> } @else { <th></th> }
           </tr>
         </thead>
         <tbody>
@@ -57,7 +57,11 @@
               <td>
                 <span [class]="getStatusBadgeClass(cita.estadoCita)">{{ cita.estadoCita }}</span>
               </td>
-              @if (userRole() !== 'MEDICO') {
+              @if (userRole() === 'MEDICO') {
+                <td class="actions-cell">
+                  <a class="history-link" [routerLink]="['/citas', cita.id, 'historial-clinico']">Ver historial</a>
+                </td>
+              } @else {
                 <td class="actions-cell">
                   <div class="dropdown-wrapper">
                     <button class="more-btn" (click)="toggleDropdown(i, $event)">

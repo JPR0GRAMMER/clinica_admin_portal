@@ -1,0 +1,28 @@
+<div class="page-header">
+  <div class="breadcrumb"><span>Gestión Clínica</span><span>›</span><a routerLink="/citas">Citas médicas</a><span>›</span><span class="current">Historial clínico</span></div>
+  <h1>Historial clínico</h1>
+  <p>Atenciones previas del paciente asociadas a tu consulta médica.</p>
+</div>
+
+@if (error()) { <div class="alert">{{ error() }}</div> }
+
+@if (isLoading()) {
+  <div class="state"><span class="spinner"></span><p>Cargando historial clínico...</p></div>
+} @else if (historial(); as data) {
+  <section class="history-panel">
+        <div class="patient-summary"><div><h2>{{ nombreCompleto(data.paciente) }}</h2><p>DNI {{ data.paciente.documentoIdentidad }} · {{ data.paciente.correo }}</p></div><span>{{ data.atenciones.length }} atención(es)</span></div>
+        @if (data.atenciones.length === 0) {
+          <div class="state"><h2>Sin atenciones previas</h2><p>Este paciente aún no tiene atenciones médicas registradas contigo.</p></div>
+        } @else { <div class="timeline">
+          @for (atencion of data.atenciones; track atencion.id) {
+            <article class="attention-card">
+              <div class="attention-heading"><div><span class="date">{{ atencion.fechaAtencion | date:'mediumDate' }}</span><h3>{{ atencion.cie10.codigo }} — {{ atencion.cie10.descripcion }}</h3></div><a [routerLink]="['/atenciones/detalle', atencion.id]">Ver detalle</a></div>
+              <div class="section"><strong>Motivo de consulta</strong><p>{{ atencion.motivoConsulta }}</p></div>
+              <div class="section"><strong>Diagnóstico</strong><p>{{ atencion.diagnostico }}</p></div>
+              @if (atencion.recetas?.length) { <div class="tag">Incluye receta médica</div> }
+              @if (atencion.procedimientos?.length) { <div class="tag">Incluye procedimiento</div> }
+            </article>
+          }
+        </div> }
+  </section>
+}

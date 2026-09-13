@@ -137,6 +137,17 @@
   position: relative;
 }
 
+.history-link {
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.history-link:hover {
+  text-decoration: underline;
+}
+
 .more-btn {
   background: none;
   border: none;

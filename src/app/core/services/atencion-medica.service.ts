@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { PacienteResponse } from './paciente.service';
 
 export interface Cie10Dto {
   codigo: string;
@@ -69,6 +70,11 @@ export interface AtencionMedicaResponseDto {
   procedimientos?: ProcedimientoResponseDto[];
 }
 
+export interface HistorialClinicoResponse {
+  paciente: PacienteResponse;
+  atenciones: AtencionMedicaResponseDto[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -87,5 +93,9 @@ export class AtencionMedicaService {
 
   obtenerAtencion(id: number): Observable<AtencionMedicaResponseDto> {
     return this.http.get<AtencionMedicaResponseDto>(`${this.apiUrl}/${id}`);
+  }
+
+  obtenerHistorialPorCita(citaMedicaId: number): Observable<HistorialClinicoResponse> {
+    return this.http.get<HistorialClinicoResponse>(`${this.apiUrl}/historial/citas/${citaMedicaId}`);
   }
 }
