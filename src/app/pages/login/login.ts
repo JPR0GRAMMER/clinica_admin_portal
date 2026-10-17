@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { extractErrorMessage } from '../../core/utils/api-error.utils';
 
 @Component({
   selector: 'app-login',
@@ -50,6 +51,13 @@ export class LoginComponent {
         },
         error: (err) => {
           this.isLoading.set(false);
+          const backendMessage = extractErrorMessage(err, '');
+          if (err.status === 423) {
+            this.errorMessage.set(
+              backendMessage || 'La cuenta está bloqueada por superar 3 intentos fallidos. Contacta al administrador.'
+            );
+            return;
+          }
           if (err.name === 'TimeoutError') {
             this.errorMessage.set('El servidor tardó demasiado en responder. Revisa tu conexión.');
           } else if (err.status === 401 || err.status === 403) {
