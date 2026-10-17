@@ -61,9 +61,9 @@ export class LoginComponent {
           if (err.name === 'TimeoutError') {
             this.errorMessage.set('El servidor tardó demasiado en responder. Revisa tu conexión.');
           } else if (err.status === 401 || err.status === 403) {
-            this.errorMessage.set('Credenciales incorrectas. Verifica tu correo y contraseña.');
+            this.errorMessage.set(backendMessage || 'Credenciales incorrectas. Verifica tu correo y contraseña.');
           } else {
-            this.errorMessage.set('Ocurrió un error al intentar iniciar sesión. Inténtalo más tarde.');
+            this.errorMessage.set(backendMessage || 'Ocurrió un error al intentar iniciar sesión. Inténtalo más tarde.');
           }
         }
       });
