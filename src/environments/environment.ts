@@ -1,5 +1,5 @@
 export const environment = {
   production: false,
-  apiUrl: 'https://clinica-hafka6a3gve0dpfc.brazilsouth-01.azurewebsites.net/api',
+  apiUrl: 'https://clinica-admin-portal-back.onrender.com/api',
   errorTimeoutMs: 5000
 };
