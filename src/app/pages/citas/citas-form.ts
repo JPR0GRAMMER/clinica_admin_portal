@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { CitaService, CitaResponse } from '../../core/services/cita.service';
+import { EstadoCita } from '../../core/models/estado-cita';
 import { PacienteService, PacienteResponse } from '../../core/services/paciente.service';
 import { EspecialidadService, EspecialidadResponse } from '../../core/services/especialidad.service';
 import { HorarioMedicoService, HorarioMedicoResponse } from '../../core/services/horario-medico.service';
@@ -14,6 +15,21 @@ export interface DoctorBlock {
   medicoId: number;
   medicoNombre: string;
   bloques: { hora: string; ocupado: boolean }[];
+}
+
+const SEGUNDOS_POR_BLOQUE = 60 * 60;
+
+function segundosDelDia(hora: string): number {
+  const [horas, minutos, segundos = 0] = hora.split(':').map(Number);
+  return horas * 3600 + minutos * 60 + segundos;
+}
+
+function formatearHora(segundosDelDia: number): string {
+  const horas = Math.floor(segundosDelDia / 3600);
+  const minutos = Math.floor(segundosDelDia / 60) % 60;
+  const segundos = segundosDelDia % 60;
+  const partes = segundos === 0 ? [horas, minutos] : [horas, minutos, segundos];
+  return partes.map(n => String(n).padStart(2, '0')).join(':');
 }
 
 @Component({
@@ -156,7 +172,7 @@ export class CitasForm implements OnInit {
                   especialidadId: especialidadObj.id,
                   fechaCita: cita.fechaCita,
                   medicoId: cita.medicoId,
-                  horaCita: cita.horaCita.substring(0, 5)
+                  horaCita: formatearHora(segundosDelDia(cita.horaCita))
                 }, { emitEvent: false });
 
                 this.isFetchingHorarios.set(true);
@@ -193,6 +209,7 @@ export class CitasForm implements OnInit {
 
     if (!especialidadId || !fecha) {
       this.doctorBlocks.set([]);
+      this.isFetchingHorarios.set(false);
       return;
     }
 
@@ -222,33 +239,28 @@ export class CitasForm implements OnInit {
         const offset = now.getTimezoneOffset();
         const localNow = new Date(now.getTime() - (offset * 60 * 1000));
         const isToday = selectedDateStr === localNow.toISOString().split('T')[0];
-        const currentHour = now.getHours();
-        const currentMinutes = now.getMinutes();
-        const currentDecimalHour = currentHour + (currentMinutes / 60);
+        const horaActual = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
 
         for (const horario of horariosDelDia) {
-          const startHour = parseInt(horario.horaInicio.split(':')[0], 10);
-          const endHour = parseInt(horario.horaFin.split(':')[0], 10);
+          const inicio = segundosDelDia(horario.horaInicio);
+          const fin = segundosDelDia(horario.horaFin);
 
           const citasOcupadas = citas.filter(c =>
             c.medicoId === horario.medicoId &&
             c.fechaCita === fecha &&
-            c.estadoCita !== 'Cancelada' &&
-            c.estadoCita !== 'No Asistió' &&
+            c.estadoCita !== EstadoCita.Cancelada &&
             c.id !== this.citaId()
           );
 
-          const horasOcupadas = citasOcupadas.map(c => c.horaCita.substring(0, 5));
+          const horasOcupadas = new Set(citasOcupadas.map(c => segundosDelDia(c.horaCita)));
           const bloques = [];
 
-          for (let i = startHour; i < endHour; i++) {
-            if (isToday && i <= currentDecimalHour) {
+          for (let hora = inicio; hora + SEGUNDOS_POR_BLOQUE <= fin; hora += SEGUNDOS_POR_BLOQUE) {
+            if (isToday && hora <= horaActual) {
               continue;
             }
 
-            const horaStr = i.toString().padStart(2, '0') + ':00';
-            const isOccupied = horasOcupadas.includes(horaStr);
-            bloques.push({ hora: horaStr, ocupado: isOccupied });
+            bloques.push({ hora: formatearHora(hora), ocupado: horasOcupadas.has(hora) });
           }
 
           if (bloques.length > 0) {
@@ -276,6 +288,15 @@ export class CitasForm implements OnInit {
 
   togglePacienteDropdown() {
     this.isPacienteDropdownOpen.set(!this.isPacienteDropdownOpen());
+    if (this.isPacienteDropdownOpen()) setTimeout(() => this.eRef.nativeElement.querySelector('#paciente-busqueda')?.focus());
+  }
+
+  @HostListener('document:keydown.escape')
+  closePacienteDropdown() {
+    if (this.isPacienteDropdownOpen()) {
+      this.isPacienteDropdownOpen.set(false);
+      this.eRef.nativeElement.querySelector('.custom-select-trigger')?.focus();
+    }
   }
 
   selectPaciente(id: number) {
@@ -283,6 +304,7 @@ export class CitasForm implements OnInit {
     this.citaForm.get('pacienteId')?.markAsTouched();
     this.isPacienteDropdownOpen.set(false);
     this.pacienteSearchQuery.set('');
+    setTimeout(() => this.eRef.nativeElement.querySelector('.custom-select-trigger')?.focus());
   }
 
   onSearchPaciente(event: Event) {
@@ -307,6 +329,8 @@ export class CitasForm implements OnInit {
   }
 
   onSubmit() {
+    if (this.isSaving()) return;
+
     if (this.citaForm.invalid) {
       this.citaForm.markAllAsTouched();
       this.showError('Por favor, completa todos los campos y selecciona un horario.');

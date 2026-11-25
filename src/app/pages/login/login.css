@@ -112,7 +112,8 @@ input[type="email"],
 input[type="text"],
 input[type="password"] {
   width: 100%;
-  padding: 8px 30px 8px 0;
+  min-height: 44px;
+  padding: 10px 48px 10px 0;
   background: transparent;
   border: none;
   border-bottom: 1px solid rgba(255, 255, 255, 0.4);
@@ -129,13 +130,15 @@ input:focus {
 .btn-toggle-password {
   position: absolute;
   right: 0;
-  bottom: 8px;
+  bottom: 0;
   background: none;
   border: none;
   color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
   padding: 0;
-  display: flex;
+  display: inline-flex;
+  min-width: 44px;
+  min-height: 44px;
   align-items: center;
   justify-content: center;
   transition: color 0.2s;

@@ -2,7 +2,7 @@
     <div class="breadcrumb">
       <span>Gestión Clínica</span>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
-      <a routerLink="/atenciones" style="text-decoration: none; color: #64748b; cursor: pointer;">Atenciones Médicas</a>
+      <a routerLink="/atenciones" style="text-decoration: none; color: #475569; cursor: pointer;">Atenciones Médicas</a>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
       <span class="current">Registrar</span>
     </div>
@@ -21,8 +21,8 @@
                 <h3 class="section-title">Datos Clínicos Básicos</h3>
         <div class="form-grid">
           <div class="form-group full-width">
-            <label>Seleccionar Cita Pendiente</label>
-            <select formControlName="citaMedicaId" 
+            <label for="atencion-cita">Seleccionar Cita Pendiente</label>
+            <select id="atencion-cita" formControlName="citaMedicaId" [attr.aria-invalid]="atencionForm.get('citaMedicaId')?.invalid && atencionForm.get('citaMedicaId')?.touched ? 'true' : null" [attr.aria-describedby]="atencionForm.get('citaMedicaId')?.invalid && atencionForm.get('citaMedicaId')?.touched ? 'atencion-cita-error' : null"
                     [class.is-invalid]="atencionForm.get('citaMedicaId')?.invalid && atencionForm.get('citaMedicaId')?.touched">
               <option [ngValue]="null" disabled>Seleccione una cita confirmada</option>
               @for (cita of citas(); track cita.id) {
@@ -32,48 +32,49 @@
               }
             </select>
             @if (atencionForm.get('citaMedicaId')?.invalid && atencionForm.get('citaMedicaId')?.touched) {
-              <div class="error-message">La cita médica es requerida.</div>
+              <div id="atencion-cita-error" class="error-message">La cita médica es requerida.</div>
             }
           </div>
 
           <div class="form-group full-width">
-            <label>Motivo de la Consulta</label>
-            <textarea formControlName="motivoConsulta" rows="3" placeholder="Describe los síntomas y el motivo principal por el que el paciente acude..."
+            <label for="atencion-motivo">Motivo de la Consulta</label>
+            <textarea id="atencion-motivo" formControlName="motivoConsulta" rows="3" placeholder="Describe los síntomas y el motivo principal por el que el paciente acude..." [attr.aria-invalid]="atencionForm.get('motivoConsulta')?.invalid && atencionForm.get('motivoConsulta')?.touched ? 'true' : null"
                       [class.is-invalid]="atencionForm.get('motivoConsulta')?.invalid && atencionForm.get('motivoConsulta')?.touched"></textarea>
           </div>
 
           <div class="form-group full-width">
-            <label>Diagnóstico (Detalle)</label>
-            <textarea formControlName="diagnostico" rows="3" placeholder="Detalle clínico del diagnóstico..."
+            <label for="atencion-diagnostico">Diagnóstico (Detalle)</label>
+            <textarea id="atencion-diagnostico" formControlName="diagnostico" rows="3" placeholder="Detalle clínico del diagnóstico..." [attr.aria-invalid]="atencionForm.get('diagnostico')?.invalid && atencionForm.get('diagnostico')?.touched ? 'true' : null"
                       [class.is-invalid]="atencionForm.get('diagnostico')?.invalid && atencionForm.get('diagnostico')?.touched"></textarea>
           </div>
 
           <div class="form-group full-width">
-            <label>Código CIE-10 (Diagnóstico Oficial)</label>
+            <label id="cie10-label">Código CIE-10 (Diagnóstico Oficial)</label>
             <div class="custom-select-container">
-              <div class="custom-select-trigger" 
+              <button type="button" class="custom-select-trigger" [attr.aria-expanded]="isCie10DropdownOpen()" [attr.aria-controls]="isCie10DropdownOpen() ? 'cie10-opciones' : null" [attr.aria-invalid]="atencionForm.get('codigoCie10')?.invalid && atencionForm.get('codigoCie10')?.touched ? 'true' : null"
                    (click)="toggleCie10Dropdown()" 
                    [ngClass]="{'open': isCie10DropdownOpen(), 'invalid': atencionForm.get('codigoCie10')?.invalid && atencionForm.get('codigoCie10')?.touched}">
-                <span>{{ selectedCie10() ? (selectedCie10()?.codigo + ' - ' + selectedCie10()?.descripcion) : 'Buscar código CIE-10 o descripción...' }}</span>
+                <span><span class="sr-only">Código CIE-10: </span>{{ selectedCie10() ? (selectedCie10()?.codigo + ' - ' + selectedCie10()?.descripcion) : 'Buscar código CIE-10 o descripción...' }}</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="chevron"><polyline points="6 9 12 15 18 9"></polyline></svg>
-              </div>
+              </button>
 
               @if (isCie10DropdownOpen()) {
                 <div class="custom-select-dropdown">
                   <div class="custom-select-search">
-                    <input type="text" placeholder="Escribe para buscar..." 
+                    <label class="sr-only" for="cie10-busqueda">Buscar código CIE-10 o descripción</label>
+                    <input id="cie10-busqueda" type="text" placeholder="Escribe para buscar..."
                            (input)="onSearchCie10($event)" 
                            (click)="$event.stopPropagation()"
                            [value]="cie10SearchQuery()">
                   </div>
-                  <div class="custom-select-options">
+                  <div id="cie10-opciones" class="custom-select-options">
                     @for (item of cie10Results(); track item.codigo) {
-                      <div class="custom-select-option" 
+                      <button type="button" class="custom-select-option"
                            [ngClass]="{'selected': atencionForm.get('codigoCie10')?.value === item.codigo}"
                            (click)="selectCie10(item)">
                         <span>{{ item.descripcion }}</span>
                         <span class="text-muted">CIE-10: {{ item.codigo }}</span>
-                      </div>
+                      </button>
                     }
                   </div>
                 </div>
@@ -96,13 +97,13 @@
             <h3 class="section-title">Procedimiento Médico</h3>
             <div class="form-grid">
               <div class="form-group full-width">
-                <label>Descripción del Procedimiento</label>
-                <textarea formControlName="descripcionProcedimiento" rows="3" placeholder="Ej: Curación de herida, Inmovilización con yeso..."></textarea>
+                <label for="procedimiento-descripcion">Descripción del Procedimiento</label>
+                <textarea id="procedimiento-descripcion" formControlName="descripcionProcedimiento" rows="3" placeholder="Ej: Curación de herida, Inmovilización con yeso..."></textarea>
               </div>
 
               <div class="form-group full-width">
-                <label>Resultado / Observaciones</label>
-                <textarea formControlName="resultado" rows="3" placeholder="Ej: Procedimiento exitoso sin complicaciones..."></textarea>
+                <label for="procedimiento-resultado">Resultado / Observaciones</label>
+                <textarea id="procedimiento-resultado" formControlName="resultado" rows="3" placeholder="Ej: Procedimiento exitoso sin complicaciones..."></textarea>
               </div>
             </div>
           </div>
@@ -120,8 +121,8 @@
             <h3 class="section-title">Receta Médica</h3>
             <div class="form-grid">
               <div class="form-group full-width">
-                <label>Indicaciones Generales</label>
-                <textarea formControlName="indicacionesGenerales" rows="2" placeholder="Indicaciones para el paciente (ej: Reposo por 3 días, tomar abundante agua...)"></textarea>
+                <label for="receta-indicaciones">Indicaciones Generales</label>
+                <textarea id="receta-indicaciones" formControlName="indicacionesGenerales" rows="2" placeholder="Indicaciones para el paciente (ej: Reposo por 3 días, tomar abundante agua...)"></textarea>
               </div>
             </div>
 
@@ -131,28 +132,29 @@
                 <div [formGroupName]="i" class="medicamento-row">
                   
                   <div class="form-group med-search">
-                    <label>Medicamento</label>
+                    <label [id]="'medicamento-label-' + i">Medicamento</label>
                     <div class="custom-select-container">
-                      <div class="custom-select-trigger" 
+                      <button type="button" class="custom-select-trigger" [attr.aria-expanded]="isMedicamentoDropdownOpen()[i]" [attr.aria-controls]="isMedicamentoDropdownOpen()[i] ? 'medicamento-opciones-' + i : null"
                            (click)="toggleMedicamentoDropdown(i, $event)">
-                        <span>{{ selectedMedicamentos()[i] ? selectedMedicamentos()[i]?.nombreComercial + ' (' + selectedMedicamentos()[i]?.presentacion + ' ' + selectedMedicamentos()[i]?.concentracion + ' ' + selectedMedicamentos()[i]?.unidadMedida + ')' : 'Buscar medicamento...' }}</span>
+                        <span><span class="sr-only">Medicamento {{ i + 1 }}: </span>{{ selectedMedicamentos()[i] ? selectedMedicamentos()[i]?.nombreComercial + ' (' + selectedMedicamentos()[i]?.presentacion + ' ' + selectedMedicamentos()[i]?.concentracion + ' ' + selectedMedicamentos()[i]?.unidadMedida + ')' : 'Buscar medicamento...' }}</span>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="chevron"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                      </div>
+                      </button>
 
                       @if (isMedicamentoDropdownOpen()[i]) {
                         <div class="custom-select-dropdown">
                           <div class="custom-select-search">
-                            <input type="text" placeholder="Escribe para buscar..." 
+                            <label class="sr-only" [for]="'medicamento-busqueda-' + i">Buscar medicamento</label>
+                            <input type="text" [id]="'medicamento-busqueda-' + i" placeholder="Escribe para buscar..."
                                    (input)="onSearchMedicamento(i, $event)" 
                                    (click)="$event.stopPropagation()"
                                    [value]="medicamentoSearchQuery()[i]">
                           </div>
-                          <div class="custom-select-options">
+                          <div class="custom-select-options" [id]="'medicamento-opciones-' + i">
                             @for (item of medicamentosBusqueda(); track item.id) {
-                              <div class="custom-select-option" (click)="selectMedicamento(i, item)">
+                              <button type="button" class="custom-select-option" (click)="selectMedicamento(i, item)">
                                 <span>{{ item.nombreComercial }}</span>
                                 <span class="badge">{{ item.presentacion }} {{ item.concentracion }} {{ item.unidadMedida }}</span>
-                              </div>
+                              </button>
                             }
                           </div>
                         </div>
@@ -161,23 +163,23 @@
                   </div>
 
                   <div class="form-group">
-                    <label>Dosis</label>
-                    <input type="text" formControlName="dosis" placeholder="Ej: 1 tableta">
+                    <label [for]="'medicamento-dosis-' + i">Dosis</label>
+                    <input type="text" [id]="'medicamento-dosis-' + i" formControlName="dosis" placeholder="Ej: 1 tableta">
                   </div>
                   
                   <div class="form-group">
-                    <label>Frecuencia</label>
-                    <input type="text" formControlName="frecuencia" placeholder="Ej: Cada 8 horas">
+                    <label [for]="'medicamento-frecuencia-' + i">Frecuencia</label>
+                    <input type="text" [id]="'medicamento-frecuencia-' + i" formControlName="frecuencia" placeholder="Ej: Cada 8 horas">
                   </div>
                   
                   <div class="form-group">
-                    <label>Duración</label>
-                    <input type="text" formControlName="duracionTratamiento" placeholder="Ej: 5 días">
+                    <label [for]="'medicamento-duracion-' + i">Duración</label>
+                    <input type="text" [id]="'medicamento-duracion-' + i" formControlName="duracionTratamiento" placeholder="Ej: 5 días">
                   </div>
 
                   <div class="form-group">
-                    <label>Cantidad</label>
-                    <input type="number" formControlName="cantidadPrescrita" placeholder="Ej: 10" min="1">
+                    <label [for]="'medicamento-cantidad-' + i">Cantidad</label>
+                    <input type="number" [id]="'medicamento-cantidad-' + i" formControlName="cantidadPrescrita" placeholder="Ej: 10" min="1">
                   </div>
 
                   <button type="button" class="btn-remove" (click)="removeMedicamento(i)" title="Eliminar medicamento">
@@ -195,7 +197,7 @@
         }
 
         @if (formError()) {
-          <div class="alert-danger" style="margin-top: 2rem;">
+          <div class="alert-danger" role="alert" style="margin-top: 2rem;">
             {{ formError() }}
           </div>
         }

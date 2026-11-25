@@ -7,7 +7,7 @@
   align-items: center;
   gap: 8px;
   font-size: 14px;
-  color: #64748b;
+  color: #475569;
 }
 
 .breadcrumb svg {
@@ -16,7 +16,7 @@
 }
 
 .breadcrumb-link {
-  color: #64748b;
+  color: #475569;
   text-decoration: none;
   transition: color 0.2s;
 }
@@ -39,7 +39,7 @@
 
 .top-selectors {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
   gap: 24px;
 }
 
@@ -77,6 +77,11 @@
 }
 
 .custom-select-trigger {
+  width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-align: left;
+  font-family: inherit;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -160,6 +165,13 @@
 }
 
 .custom-select-option {
+  width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  border: 0;
+  background: white;
+  text-align: left;
+  font-family: inherit;
   padding: 10px 16px;
   font-size: 14px;
   color: #334155;
@@ -431,4 +443,13 @@
   0% { transform: translateX(-100%) scaleX(0.2); }
   50% { transform: translateX(0) scaleX(0.5); }
   100% { transform: translateX(100%) scaleX(0.2); }
+}
+
+@media (max-width: 640px) {
+  .form-card { padding: 16px; }
+  .top-selectors, .doctor-blocks-grid { grid-template-columns: minmax(0, 1fr); }
+  .form-group, .custom-select-container, .form-group input, .form-group select { min-width: 0; width: 100%; }
+  .form-actions { flex-wrap: wrap; }
+  .loading-state { padding: 32px 12px; }
+  .breadcrumb { flex-wrap: wrap; }
 }
