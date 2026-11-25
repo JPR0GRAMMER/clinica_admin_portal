@@ -1,7 +1,8 @@
-import { Component, OnInit, signal, computed, HostListener, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { CitaService, CitaResponse } from '../../core/services/cita.service';
 import { EstadoCita } from '../../core/models/estado-cita';
 import { PacienteService, PacienteResponse } from '../../core/services/paciente.service';
@@ -11,10 +12,15 @@ import { MedicoService } from '../../core/services/medico.service';
 import { extractErrorMessage } from '../../core/utils/api-error.utils';
 import { environment } from '../../../environments/environment';
 
+export interface TimeSlot {
+  hora: string;
+  ocupado: boolean;
+}
+
 export interface DoctorBlock {
   medicoId: number;
   medicoNombre: string;
-  bloques: { hora: string; ocupado: boolean }[];
+  bloques: TimeSlot[];
 }
 
 const SEGUNDOS_POR_BLOQUE = 60 * 60;
@@ -24,12 +30,10 @@ function segundosDelDia(hora: string): number {
   return horas * 3600 + minutos * 60 + segundos;
 }
 
-function formatearHora(segundosDelDia: number): string {
-  const horas = Math.floor(segundosDelDia / 3600);
-  const minutos = Math.floor(segundosDelDia / 60) % 60;
-  const segundos = segundosDelDia % 60;
-  const partes = segundos === 0 ? [horas, minutos] : [horas, minutos, segundos];
-  return partes.map(n => String(n).padStart(2, '0')).join(':');
+function formatearHora(segundos: number): string {
+  const horas = Math.floor(segundos / 3600);
+  const minutos = Math.floor(segundos / 60) % 60;
+  return [horas, minutos].map(n => String(n).padStart(2, '0')).join(':');
 }
 
 @Component({
@@ -39,18 +43,20 @@ function formatearHora(segundosDelDia: number): string {
   templateUrl: './citas-form.html',
   styleUrls: ['./citas-form.css']
 })
-export class CitasForm implements OnInit {
+export class CitasForm implements OnInit, OnDestroy {
+  private static readonly HORA_APERTURA_CLINICA = 8;
+  private static readonly ESTADO_ACTIVO = 1;
+
   pacientes = signal<PacienteResponse[]>([]);
   especialidades = signal<EspecialidadResponse[]>([]);
   horariosMedico = signal<HorarioMedicoResponse[]>([]);
-
   doctorBlocks = signal<DoctorBlock[]>([]);
 
   isLoading = signal<boolean>(true);
   isFetchingHorarios = signal<boolean>(false);
   isSaving = signal<boolean>(false);
   formError = signal<string>('');
-  errorTimer: any = null;
+  private errorTimer: ReturnType<typeof setTimeout> | null = null;
 
   isPacienteDropdownOpen = signal<boolean>(false);
   pacienteSearchQuery = signal<string>('');
@@ -66,7 +72,6 @@ export class CitasForm implements OnInit {
   });
 
   minDate = signal<string>('');
-
   citaId = signal<number | null>(null);
   citasOcupadasDelDia = signal<CitaResponse[]>([]);
 
@@ -90,30 +95,50 @@ export class CitasForm implements OnInit {
   ) {}
 
   @HostListener('document:click', ['$event'])
-  clickOut(event: Event) {
+  clickOut(event: Event): void {
     if (!this.eRef.nativeElement.contains(event.target)) {
       this.isPacienteDropdownOpen.set(false);
     }
   }
 
-  ngOnInit() {
-    const today = new Date();
-    const offset = today.getTimezoneOffset();
-    const localToday = new Date(today.getTime() - (offset * 60 * 1000));
-    this.minDate.set(localToday.toISOString().split('T')[0]);
+  ngOnInit(): void {
+    this.minDate.set(this.getLocalTodayIsoDate());
+    this.setupFormListeners();
+    this.initializeComponentData();
+  }
 
-    this.loadInitialData();
+  ngOnDestroy(): void {
+    this.clearErrorTimer();
+  }
 
-    this.route.paramMap.subscribe(params => {
-      const id = params.get('id');
-      if (id) {
-        this.citaId.set(Number(id));
-        this.loadCitaToEdit(Number(id));
-      } else {
+  private initializeComponentData(): void {
+    this.isLoading.set(true);
+
+    forkJoin({
+      pacientes: this.pacienteService.listarPacientes(),
+      especialidades: this.especialidadService.listarEspecialidades()
+    }).subscribe({
+      next: ({ pacientes, especialidades }) => {
+        this.pacientes.set(pacientes.filter(p => p.estado === CitasForm.ESTADO_ACTIVO));
+        this.especialidades.set(especialidades);
+
+        const idParam = this.route.snapshot.paramMap.get('id');
+        if (idParam) {
+          const id = Number(idParam);
+          this.citaId.set(id);
+          this.loadCitaToEdit(id);
+        } else {
+          this.isLoading.set(false);
+        }
+      },
+      error: () => {
         this.isLoading.set(false);
+        this.showError('Error al cargar los datos iniciales del formulario.');
       }
     });
+  }
 
+  private setupFormListeners(): void {
     this.citaForm.get('especialidadId')?.valueChanges.subscribe(especialidadId => {
       if (!this.isLoading()) {
         this.citaForm.patchValue({ medicoId: null, horaCita: '' }, { emitEvent: false });
@@ -121,14 +146,7 @@ export class CitasForm implements OnInit {
       this.doctorBlocks.set([]);
 
       if (especialidadId) {
-        this.isFetchingHorarios.set(true);
-        this.horarioMedicoService.listarPorEspecialidad(Number(especialidadId)).subscribe({
-          next: (horarios) => {
-            this.horariosMedico.set(horarios);
-            this.calculateDoctorBlocks();
-          },
-          error: () => this.isFetchingHorarios.set(false)
-        });
+        this.fetchHorariosAndCalculateBlocks(Number(especialidadId));
       } else {
         this.horariosMedico.set([]);
       }
@@ -138,72 +156,62 @@ export class CitasForm implements OnInit {
       if (!this.isLoading()) {
         this.citaForm.patchValue({ medicoId: null, horaCita: '' }, { emitEvent: false });
       }
-      this.isFetchingHorarios.set(true);
       this.calculateDoctorBlocks();
     });
   }
 
-  loadInitialData() {
-    this.pacienteService.listarPacientes().subscribe({
-      next: (data) => {
-        this.pacientes.set(data.filter(p => p.estado === 1));
+  private fetchHorariosAndCalculateBlocks(especialidadId: number, onComplete?: () => void): void {
+    this.isFetchingHorarios.set(true);
+    this.horarioMedicoService.listarPorEspecialidad(especialidadId).subscribe({
+      next: (horarios) => {
+        this.horariosMedico.set(horarios);
+        this.calculateDoctorBlocks();
+        onComplete?.();
+      },
+      error: () => {
+        this.isFetchingHorarios.set(false);
+        onComplete?.();
       }
-    });
-
-    this.especialidadService.listarEspecialidades().subscribe({
-      next: (data) => this.especialidades.set(data)
     });
   }
 
-  loadCitaToEdit(id: number) {
-    this.isLoading.set(true);
-    this.citaService.listarCitas().subscribe({
-      next: (citas) => {
+  private loadCitaToEdit(id: number): void {
+    forkJoin({
+      citas: this.citaService.listarCitas(),
+      medicos: this.medicoService.listarMedicos()
+    }).subscribe({
+      next: ({ citas, medicos }) => {
         const cita = citas.find(c => c.id === id);
-        if (cita) {
-          this.medicoService.listarMedicos().subscribe({
-            next: (medicos) => {
-              const medico = medicos.find(m => m.id === cita.medicoId);
-              const especialidadObj = this.especialidades().find(e => e.nombre === medico?.especialidad);
-
-              if (especialidadObj) {
-                this.citaForm.patchValue({
-                  pacienteId: cita.pacienteId,
-                  especialidadId: especialidadObj.id,
-                  fechaCita: cita.fechaCita,
-                  medicoId: cita.medicoId,
-                  horaCita: formatearHora(segundosDelDia(cita.horaCita))
-                }, { emitEvent: false });
-
-                this.isFetchingHorarios.set(true);
-                this.horarioMedicoService.listarPorEspecialidad(especialidadObj.id).subscribe({
-                  next: (horarios) => {
-                    this.horariosMedico.set(horarios);
-                    this.calculateDoctorBlocks();
-                    this.isLoading.set(false);
-                  },
-                  error: () => {
-                    this.isFetchingHorarios.set(false);
-                    this.isLoading.set(false);
-                  }
-                });
-              } else {
-                 this.isLoading.set(false);
-              }
-            },
-            error: () => {
-              this.isLoading.set(false);
-            }
-          });
-        } else {
+        if (!cita) {
           this.router.navigate(['/citas']);
+          return;
         }
+
+        const medico = medicos.find(m => m.id === cita.medicoId);
+        const especialidadObj = this.especialidades().find(e => e.nombre === medico?.especialidad);
+
+        if (!especialidadObj) {
+          this.isLoading.set(false);
+          return;
+        }
+
+        this.citaForm.patchValue({
+          pacienteId: cita.pacienteId,
+          especialidadId: especialidadObj.id,
+          fechaCita: cita.fechaCita,
+          medicoId: cita.medicoId,
+          horaCita: formatearHora(segundosDelDia(cita.horaCita))
+        }, { emitEvent: false });
+
+        this.fetchHorariosAndCalculateBlocks(especialidadObj.id, () => {
+          this.isLoading.set(false);
+        });
       },
       error: () => this.router.navigate(['/citas'])
     });
   }
 
-  calculateDoctorBlocks() {
+  calculateDoctorBlocks(): void {
     const especialidadId = this.citaForm.get('especialidadId')?.value;
     const fecha = this.citaForm.get('fechaCita')?.value;
 
@@ -213,93 +221,132 @@ export class CitasForm implements OnInit {
       return;
     }
 
-    const dateObj = new Date(fecha);
-    if (isNaN(dateObj.getTime())) {
+    const diaSemana = this.extractIsoDayOfWeek(fecha);
+    if (!diaSemana) {
+      this.doctorBlocks.set([]);
       this.isFetchingHorarios.set(false);
       return;
     }
 
-    let diaSemana = dateObj.getUTCDay();
-    if (diaSemana === 0) diaSemana = 7;
-
     const horariosDelDia = this.horariosMedico().filter(h => h.diaSemana === diaSemana);
-
     if (horariosDelDia.length === 0) {
       this.doctorBlocks.set([]);
       this.isFetchingHorarios.set(false);
       return;
     }
 
+    this.isFetchingHorarios.set(true);
     this.citaService.listarCitas().subscribe({
       next: (citas) => {
-        const newBlocks: DoctorBlock[] = [];
-
+        const isToday = fecha === this.getLocalTodayIsoDate();
         const now = new Date();
-        const selectedDateStr = fecha;
-        const offset = now.getTimezoneOffset();
-        const localNow = new Date(now.getTime() - (offset * 60 * 1000));
-        const isToday = selectedDateStr === localNow.toISOString().split('T')[0];
         const horaActual = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
 
+        const blocksByMedico = new Map<number, DoctorBlock>();
+
         for (const horario of horariosDelDia) {
-          const inicio = segundosDelDia(horario.horaInicio);
+          const inicio = Math.max(segundosDelDia(horario.horaInicio), CitasForm.HORA_APERTURA_CLINICA * SEGUNDOS_POR_BLOQUE);
           const fin = segundosDelDia(horario.horaFin);
 
-          const citasOcupadas = citas.filter(c =>
-            c.medicoId === horario.medicoId &&
-            c.fechaCita === fecha &&
-            c.estadoCita !== EstadoCita.Cancelada &&
-            c.id !== this.citaId()
+          const horasOcupadas = new Set(
+            citas
+              .filter(c =>
+                c.medicoId === horario.medicoId &&
+                c.fechaCita === fecha &&
+                c.estadoCita !== EstadoCita.Cancelada &&
+                c.id !== this.citaId()
+              )
+              .map(c => segundosDelDia(c.horaCita))
           );
 
-          const horasOcupadas = new Set(citasOcupadas.map(c => segundosDelDia(c.horaCita)));
-          const bloques = [];
+          const bloquesTurno: TimeSlot[] = [];
 
           for (let hora = inicio; hora + SEGUNDOS_POR_BLOQUE <= fin; hora += SEGUNDOS_POR_BLOQUE) {
             if (isToday && hora <= horaActual) {
               continue;
             }
 
-            bloques.push({ hora: formatearHora(hora), ocupado: horasOcupadas.has(hora) });
-          }
-
-          if (bloques.length > 0) {
-            newBlocks.push({
-              medicoId: horario.medicoId,
-              medicoNombre: horario.medicoNombreCompleto,
-              bloques: bloques
+            const horaStr = formatearHora(hora);
+            bloquesTurno.push({
+              hora: horaStr,
+              ocupado: horasOcupadas.has(hora)
             });
           }
+
+          if (bloquesTurno.length > 0) {
+            const existingDoctor = blocksByMedico.get(horario.medicoId);
+            if (existingDoctor) {
+              const existingHours = new Set(existingDoctor.bloques.map(b => b.hora));
+              for (const slot of bloquesTurno) {
+                if (!existingHours.has(slot.hora)) {
+                  existingDoctor.bloques.push(slot);
+                }
+              }
+              existingDoctor.bloques.sort((a, b) => a.hora.localeCompare(b.hora));
+            } else {
+              blocksByMedico.set(horario.medicoId, {
+                medicoId: horario.medicoId,
+                medicoNombre: horario.medicoNombreCompleto,
+                bloques: bloquesTurno
+              });
+            }
+          }
         }
-        this.doctorBlocks.set(newBlocks);
+
+        this.doctorBlocks.set(Array.from(blocksByMedico.values()));
         this.isFetchingHorarios.set(false);
       },
       error: () => this.isFetchingHorarios.set(false)
     });
   }
 
-  selectSlot(medicoId: number, horaStr: string, isOccupied: boolean) {
+  /**
+   * Obtiene el día de la semana ISO (1 = Lunes ... 7 = Domingo) sin desfases de zona horaria.
+   */
+  private extractIsoDayOfWeek(fechaIso: string): number | null {
+    const parts = fechaIso.split('-').map(Number);
+    if (parts.length !== 3 || parts.some(isNaN)) {
+      return null;
+    }
+    const [year, month, day] = parts;
+    const localDate = new Date(year, month - 1, day);
+    if (isNaN(localDate.getTime())) {
+      return null;
+    }
+    const dayOfWeek = localDate.getDay();
+    return dayOfWeek === 0 ? 7 : dayOfWeek;
+  }
+
+  private getLocalTodayIsoDate(): string {
+    const today = new Date();
+    const offsetMs = today.getTimezoneOffset() * 60 * 1000;
+    return new Date(today.getTime() - offsetMs).toISOString().split('T')[0];
+  }
+
+  selectSlot(medicoId: number, horaStr: string, isOccupied: boolean): void {
     if (isOccupied) return;
     this.citaForm.patchValue({
-      medicoId: medicoId,
+      medicoId,
       horaCita: horaStr
     });
   }
 
-  togglePacienteDropdown() {
-    this.isPacienteDropdownOpen.set(!this.isPacienteDropdownOpen());
-    if (this.isPacienteDropdownOpen()) setTimeout(() => this.eRef.nativeElement.querySelector('#paciente-busqueda')?.focus());
+  togglePacienteDropdown(): void {
+    this.isPacienteDropdownOpen.update(open => !open);
+    if (this.isPacienteDropdownOpen()) {
+      setTimeout(() => this.eRef.nativeElement.querySelector('#paciente-busqueda')?.focus());
+    }
   }
 
   @HostListener('document:keydown.escape')
-  closePacienteDropdown() {
+  closePacienteDropdown(): void {
     if (this.isPacienteDropdownOpen()) {
       this.isPacienteDropdownOpen.set(false);
       this.eRef.nativeElement.querySelector('.custom-select-trigger')?.focus();
     }
   }
 
-  selectPaciente(id: number) {
+  selectPaciente(id: number): void {
     this.citaForm.patchValue({ pacienteId: id });
     this.citaForm.get('pacienteId')?.markAsTouched();
     this.isPacienteDropdownOpen.set(false);
@@ -307,7 +354,7 @@ export class CitasForm implements OnInit {
     setTimeout(() => this.eRef.nativeElement.querySelector('.custom-select-trigger')?.focus());
   }
 
-  onSearchPaciente(event: Event) {
+  onSearchPaciente(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.pacienteSearchQuery.set(input.value);
   }
@@ -320,15 +367,22 @@ export class CitasForm implements OnInit {
     return `${paciente.nombre} ${paciente.apellido} (DNI: ${paciente.documentoIdentidad})`;
   }
 
-  showError(msg: string) {
-    if (this.errorTimer) clearTimeout(this.errorTimer);
+  showError(msg: string): void {
+    this.clearErrorTimer();
     this.formError.set(msg);
     if (msg) {
       this.errorTimer = setTimeout(() => this.formError.set(''), environment.errorTimeoutMs);
     }
   }
 
-  onSubmit() {
+  private clearErrorTimer(): void {
+    if (this.errorTimer) {
+      clearTimeout(this.errorTimer);
+      this.errorTimer = null;
+    }
+  }
+
+  onSubmit(): void {
     if (this.isSaving()) return;
 
     if (this.citaForm.invalid) {
@@ -339,9 +393,9 @@ export class CitasForm implements OnInit {
 
     this.isSaving.set(true);
     this.formError.set('');
-    if (this.errorTimer) clearTimeout(this.errorTimer);
+    this.clearErrorTimer();
 
-    const formValue = this.citaForm.value;
+    const formValue = this.citaForm.getRawValue();
     const requestData = {
       pacienteId: Number(formValue.pacienteId),
       medicoId: Number(formValue.medicoId),
@@ -349,28 +403,24 @@ export class CitasForm implements OnInit {
       horaCita: formValue.horaCita!
     };
 
-    if (this.citaId()) {
-      this.citaService.reprogramarCita(this.citaId()!, requestData).subscribe({
-        next: () => {
-          this.isSaving.set(false);
-          this.router.navigate(['/citas']);
-        },
-        error: (err) => {
-          this.isSaving.set(false);
-          this.showError(extractErrorMessage(err, 'Error al reprogramar la cita.'));
-        }
-      });
-    } else {
-      this.citaService.agendarCita(requestData).subscribe({
-        next: () => {
-          this.isSaving.set(false);
-          this.router.navigate(['/citas']);
-        },
-        error: (err) => {
-          this.isSaving.set(false);
-          this.showError(extractErrorMessage(err, 'Error al agendar la cita.'));
-        }
-      });
-    }
+    const id = this.citaId();
+    const request$ = id
+      ? this.citaService.reprogramarCita(id, requestData)
+      : this.citaService.agendarCita(requestData);
+
+    const defaultErrorMsg = id
+      ? 'Error al reprogramar la cita.'
+      : 'Error al agendar la cita.';
+
+    request$.subscribe({
+      next: () => {
+        this.isSaving.set(false);
+        this.router.navigate(['/citas']);
+      },
+      error: (err) => {
+        this.isSaving.set(false);
+        this.showError(extractErrorMessage(err, defaultErrorMsg));
+      }
+    });
   }
 }
