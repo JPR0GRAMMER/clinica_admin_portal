@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, HostListener, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { PacienteService, PacienteResponse } from '../../core/services/paciente.service';
@@ -39,6 +39,7 @@ export class Pacientes implements OnInit {
   selectedPaciente = signal<PacienteResponse | null>(null);
 
   activeDropdownIndex = signal<number | null>(null);
+  private focusBeforeModal: HTMLElement | null = null;
 
   pacienteForm = new FormGroup({
     documentoIdentidad: new FormControl('', [
@@ -74,6 +75,7 @@ export class Pacientes implements OnInit {
   }
 
   onAction(action: 'editar' | 'deshabilitar' | 'habilitar', paciente: PacienteResponse) {
+    this.focusBeforeModal = (document.activeElement as HTMLElement).closest('.dropdown-wrapper')?.querySelector<HTMLElement>('.more-btn') || document.activeElement as HTMLElement;
     this.activeDropdownIndex.set(null);
     if (action === 'editar') {
       this.openEditModal(paciente);
@@ -81,6 +83,7 @@ export class Pacientes implements OnInit {
       this.confirmAction.set(action);
       this.selectedPaciente.set(paciente);
       this.showConfirmModal.set(true);
+      setTimeout(() => document.querySelector<HTMLElement>('.modal-overlay .btn-secondary')?.focus());
     }
   }
 
@@ -88,6 +91,7 @@ export class Pacientes implements OnInit {
     this.showConfirmModal.set(false);
     this.confirmAction.set(null);
     this.selectedPaciente.set(null);
+    this.restoreFocus();
   }
 
   executeConfirmAction() {
@@ -114,10 +118,12 @@ export class Pacientes implements OnInit {
   }
 
   openCreateModal() {
+    this.focusBeforeModal = document.activeElement as HTMLElement;
     this.editingPacienteId.set(null);
     this.pacienteForm.reset();
     this.formError.set('');
     this.showCreateModal.set(true);
+    setTimeout(() => document.getElementById('paciente-documento')?.focus());
   }
 
   openEditModal(paciente: PacienteResponse) {
@@ -132,10 +138,41 @@ export class Pacientes implements OnInit {
     });
     this.formError.set('');
     this.showCreateModal.set(true);
+    setTimeout(() => document.getElementById('paciente-documento')?.focus());
   }
 
   closeCreateModal() {
     this.showCreateModal.set(false);
+    this.restoreFocus();
+  }
+
+  @HostListener('document:keydown.escape')
+  closeWithEscape() {
+    if (this.showCreateModal()) this.closeCreateModal();
+    else if (this.showConfirmModal()) this.closeConfirmModal();
+    else this.activeDropdownIndex.set(null);
+  }
+
+  trapModalFocus(event: KeyboardEvent) {
+    if (event.key !== 'Tab') return;
+    const modal = event.currentTarget as HTMLElement;
+    const controls = Array.from(modal.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href]'));
+    if (!controls.length) return;
+    const first = controls[0];
+    const last = controls[controls.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
+  private restoreFocus() {
+    const target = this.focusBeforeModal?.isConnected ? this.focusBeforeModal : document.querySelector<HTMLElement>('.more-btn, .page-header .btn-primary');
+    setTimeout(() => target?.focus());
+    this.focusBeforeModal = null;
   }
 
   showError(msg: string) {
@@ -149,6 +186,7 @@ export class Pacientes implements OnInit {
   onSubmitPaciente() {
     if (this.pacienteForm.invalid) {
       this.pacienteForm.markAllAsTouched();
+      this.formError.set('Revisa los campos marcados antes de guardar el paciente.');
       return;
     }
 

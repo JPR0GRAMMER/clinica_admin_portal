@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { EstadoCita } from '../models/estado-cita';
 
 export interface CitaResponse {
   id: number;
@@ -13,7 +14,7 @@ export interface CitaResponse {
   medicoEspecialidad: string;
   fechaCita: string;
   horaCita: string;
-  estadoCita: string;
+  estadoCita: EstadoCita;
 }
 
 export interface CitaRequest {
@@ -47,7 +48,7 @@ export class CitaService {
     return this.http.put<CitaResponse>(`${this.apiUrl}/${id}`, cita);
   }
 
-  cambiarEstado(id: number, estado: string): Observable<void> {
+  cambiarEstado(id: number, estado: EstadoCita): Observable<void> {
     return this.http.patch<void>(`${this.apiUrl}/${id}/estado?estado=${encodeURIComponent(estado)}`, {});
   }
 }

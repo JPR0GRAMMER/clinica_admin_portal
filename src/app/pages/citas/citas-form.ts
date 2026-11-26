@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angula
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { CitaService, CitaResponse } from '../../core/services/cita.service';
+import { EstadoCita } from '../../core/models/estado-cita';
 import { PacienteService, PacienteResponse } from '../../core/services/paciente.service';
 import { EspecialidadService, EspecialidadResponse } from '../../core/services/especialidad.service';
 import { HorarioMedicoService, HorarioMedicoResponse } from '../../core/services/horario-medico.service';
@@ -22,6 +23,19 @@ export interface DoctorBlock {
   bloques: TimeSlot[];
 }
 
+const SEGUNDOS_POR_BLOQUE = 60 * 60;
+
+function segundosDelDia(hora: string): number {
+  const [horas, minutos, segundos = 0] = hora.split(':').map(Number);
+  return horas * 3600 + minutos * 60 + segundos;
+}
+
+function formatearHora(segundos: number): string {
+  const horas = Math.floor(segundos / 3600);
+  const minutos = Math.floor(segundos / 60) % 60;
+  return [horas, minutos].map(n => String(n).padStart(2, '0')).join(':');
+}
+
 @Component({
   selector: 'app-citas-form',
   standalone: true,
@@ -31,7 +45,6 @@ export interface DoctorBlock {
 })
 export class CitasForm implements OnInit, OnDestroy {
   private static readonly HORA_APERTURA_CLINICA = 8;
-  private static readonly ESTADO_CANCELADA = 'Cancelada';
   private static readonly ESTADO_ACTIVO = 1;
 
   pacientes = signal<PacienteResponse[]>([]);
@@ -187,7 +200,7 @@ export class CitasForm implements OnInit, OnDestroy {
           especialidadId: especialidadObj.id,
           fechaCita: cita.fechaCita,
           medicoId: cita.medicoId,
-          horaCita: cita.horaCita.substring(0, 5)
+          horaCita: formatearHora(segundosDelDia(cita.horaCita))
         }, { emitEvent: false });
 
         this.fetchHorariosAndCalculateBlocks(especialidadObj.id, () => {
@@ -227,36 +240,36 @@ export class CitasForm implements OnInit, OnDestroy {
       next: (citas) => {
         const isToday = fecha === this.getLocalTodayIsoDate();
         const now = new Date();
-        const currentDecimalHour = now.getHours() + (now.getMinutes() / 60);
+        const horaActual = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
 
         const blocksByMedico = new Map<number, DoctorBlock>();
 
         for (const horario of horariosDelDia) {
-          const effectiveStartHour = this.getEffectiveStartHour(horario.horaInicio);
-          const endHour = this.getEndHour(horario.horaFin);
+          const inicio = Math.max(segundosDelDia(horario.horaInicio), CitasForm.HORA_APERTURA_CLINICA * SEGUNDOS_POR_BLOQUE);
+          const fin = segundosDelDia(horario.horaFin);
 
           const horasOcupadas = new Set(
             citas
               .filter(c =>
                 c.medicoId === horario.medicoId &&
                 c.fechaCita === fecha &&
-                c.estadoCita !== CitasForm.ESTADO_CANCELADA &&
+                c.estadoCita !== EstadoCita.Cancelada &&
                 c.id !== this.citaId()
               )
-              .map(c => c.horaCita.substring(0, 5))
+              .map(c => segundosDelDia(c.horaCita))
           );
 
           const bloquesTurno: TimeSlot[] = [];
 
-          for (let hour = effectiveStartHour; hour < endHour; hour++) {
-            if (isToday && hour <= currentDecimalHour) {
+          for (let hora = inicio; hora + SEGUNDOS_POR_BLOQUE <= fin; hora += SEGUNDOS_POR_BLOQUE) {
+            if (isToday && hora <= horaActual) {
               continue;
             }
 
-            const horaStr = `${hour.toString().padStart(2, '0')}:00`;
+            const horaStr = formatearHora(hora);
             bloquesTurno.push({
               hora: horaStr,
-              ocupado: horasOcupadas.has(horaStr)
+              ocupado: horasOcupadas.has(hora)
             });
           }
 
@@ -285,22 +298,6 @@ export class CitasForm implements OnInit, OnDestroy {
       },
       error: () => this.isFetchingHorarios.set(false)
     });
-  }
-
-  /**
-   * Calcula la primera hora en punto válida dentro del horario del médico.
-   * Si el horario inicia con minutos (ej. 07:30 o 08:30), redondea a la siguiente hora en punto (08:00 o 09:00)
-   * y garantiza que ningún turno inicie antes de HORA_APERTURA_CLINICA (08:00).
-   */
-  private getEffectiveStartHour(horaInicio: string): number {
-    const [hours, minutes] = horaInicio.split(':').map(Number);
-    const firstFullHour = minutes > 0 ? hours + 1 : hours;
-    return Math.max(CitasForm.HORA_APERTURA_CLINICA, firstFullHour);
-  }
-
-  private getEndHour(horaFin: string): number {
-    const [hours] = horaFin.split(':').map(Number);
-    return hours;
   }
 
   /**
@@ -336,6 +333,17 @@ export class CitasForm implements OnInit, OnDestroy {
 
   togglePacienteDropdown(): void {
     this.isPacienteDropdownOpen.update(open => !open);
+    if (this.isPacienteDropdownOpen()) {
+      setTimeout(() => this.eRef.nativeElement.querySelector('#paciente-busqueda')?.focus());
+    }
+  }
+
+  @HostListener('document:keydown.escape')
+  closePacienteDropdown(): void {
+    if (this.isPacienteDropdownOpen()) {
+      this.isPacienteDropdownOpen.set(false);
+      this.eRef.nativeElement.querySelector('.custom-select-trigger')?.focus();
+    }
   }
 
   selectPaciente(id: number): void {
@@ -343,6 +351,7 @@ export class CitasForm implements OnInit, OnDestroy {
     this.citaForm.get('pacienteId')?.markAsTouched();
     this.isPacienteDropdownOpen.set(false);
     this.pacienteSearchQuery.set('');
+    setTimeout(() => this.eRef.nativeElement.querySelector('.custom-select-trigger')?.focus());
   }
 
   onSearchPaciente(event: Event): void {
@@ -374,6 +383,8 @@ export class CitasForm implements OnInit, OnDestroy {
   }
 
   onSubmit(): void {
+    if (this.isSaving()) return;
+
     if (this.citaForm.invalid) {
       this.citaForm.markAllAsTouched();
       this.showError('Por favor, completa todos los campos y selecciona un horario.');

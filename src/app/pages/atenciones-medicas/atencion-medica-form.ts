@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CitaService, CitaResponse } from '../../core/services/cita.service';
+import { esReprogramable } from '../../core/models/estado-cita';
 import { Cie10Service, Cie10Response } from '../../core/services/cie10.service';
 import { AtencionMedicaService, AtencionMedicaRegistroDto } from '../../core/services/atencion-medica.service';
 import { MedicamentoService } from '../../core/services/medicamento.service';
@@ -92,7 +93,7 @@ export class AtencionMedicaForm implements OnInit {
     this.citaService.listarCitas().subscribe({
       next: (data) => {
         const pendientes = data.filter(c =>
-          c.estadoCita === 'Confirmada' || c.estadoCita === 'Reprogramada'
+          esReprogramable(c.estadoCita)
         );
         this.citas.set(pendientes);
       },
@@ -177,6 +178,7 @@ export class AtencionMedicaForm implements OnInit {
 
   toggleCie10Dropdown() {
     this.isCie10DropdownOpen.set(!this.isCie10DropdownOpen());
+    if (this.isCie10DropdownOpen()) setTimeout(() => this.eRef.nativeElement.querySelector('#cie10-busqueda')?.focus());
     if (this.isCie10DropdownOpen() && this.cie10SearchQuery().trim() === '') {
       this.cie10Results.set(this.allCie10Results().slice(0, 100));
     }
@@ -203,6 +205,7 @@ export class AtencionMedicaForm implements OnInit {
     this.atencionForm.patchValue({ codigoCie10: item.codigo });
     this.atencionForm.get('codigoCie10')?.markAsTouched();
     this.isCie10DropdownOpen.set(false);
+    setTimeout(() => this.eRef.nativeElement.querySelector('.custom-select-trigger')?.focus());
   }
 
   toggleMedicamentoDropdown(index: number, event: Event) {
@@ -211,6 +214,7 @@ export class AtencionMedicaForm implements OnInit {
     const n = this.isMedicamentoDropdownOpen().map(() => false);
     n[index] = !current;
     this.isMedicamentoDropdownOpen.set(n);
+    if (n[index]) setTimeout(() => this.eRef.nativeElement.querySelector(`#medicamento-busqueda-${index}`)?.focus());
   }
 
   onSearchMedicamento(index: number, event: Event) {
@@ -241,6 +245,20 @@ export class AtencionMedicaForm implements OnInit {
     const n = [...this.isMedicamentoDropdownOpen()];
     n[index] = false;
     this.isMedicamentoDropdownOpen.set(n);
+    setTimeout(() => this.eRef.nativeElement.querySelectorAll('.med-search .custom-select-trigger')[index]?.focus());
+  }
+
+  @HostListener('document:keydown.escape')
+  closeSearchDropdowns() {
+    if (this.isCie10DropdownOpen()) {
+      this.isCie10DropdownOpen.set(false);
+      this.eRef.nativeElement.querySelector('.custom-select-trigger')?.focus();
+    }
+    const openIndex = this.isMedicamentoDropdownOpen().findIndex(Boolean);
+    if (openIndex >= 0) {
+      this.isMedicamentoDropdownOpen.set(this.isMedicamentoDropdownOpen().map(() => false));
+      this.eRef.nativeElement.querySelectorAll('.med-search .custom-select-trigger')[openIndex]?.focus();
+    }
   }
 
   onSubmit() {

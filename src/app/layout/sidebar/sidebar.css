@@ -111,3 +111,9 @@
   visibility: visible;
   transform: translateY(-50%) translateX(0);
 }
+
+.nav-item[data-tooltip]:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(-50%) translateX(0);
+}
