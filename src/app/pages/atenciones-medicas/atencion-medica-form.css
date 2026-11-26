@@ -7,7 +7,7 @@
   align-items: center;
   gap: 8px;
   font-size: 14px;
-  color: #64748b;
+  color: #475569;
 }
 
 .breadcrumb svg {
@@ -103,6 +103,11 @@
 }
 
 .custom-select-trigger {
+  width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-align: left;
+  font-family: inherit;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -188,6 +193,13 @@
 }
 
 .custom-select-option {
+  width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  border: 0;
+  background: white;
+  text-align: left;
+  font-family: inherit;
   padding: 10px 16px;
   font-size: 14px;
   color: #334155;
@@ -480,4 +492,12 @@
 
 .mt-4 {
   margin-top: 30px;
+}
+
+@media (max-width: 640px) {
+  .form-card, .optional-section { padding: 16px; min-width: 0; }
+  .form-group, .custom-select-container, .form-group input, .form-group select, .form-group textarea { min-width: 0; width: 100%; }
+  .medicamento-row { grid-template-columns: minmax(0, 1fr); }
+  .form-actions { flex-wrap: wrap; }
+  .breadcrumb { flex-wrap: wrap; }
 }

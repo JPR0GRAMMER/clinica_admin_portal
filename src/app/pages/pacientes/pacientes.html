@@ -11,7 +11,7 @@
   </div>
 
   @if (errorMessage()) {
-    <div class="error-banner">
+    <div class="error-banner" role="alert">
       {{ errorMessage() }}
     </div>
   }
@@ -71,7 +71,7 @@
               </td>
               <td class="actions-cell">
                 <div class="dropdown-wrapper">
-                  <button class="more-btn" (click)="toggleDropdown(i, $event)">
+                  <button class="more-btn" type="button" [attr.aria-label]="'Acciones de ' + paciente.nombre + ' ' + paciente.apellido" [attr.aria-expanded]="activeDropdownIndex() === i" (click)="toggleDropdown(i, $event)">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <circle cx="12" cy="12" r="1"></circle>
                       <circle cx="12" cy="5" r="1"></circle>
@@ -134,10 +134,10 @@
 
 @if (showCreateModal()) {
   <div class="modal-overlay" (click)="closeCreateModal()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="paciente-modal-title" (keydown)="trapModalFocus($event)" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h2>{{ editingPacienteId() ? 'Editar Paciente' : 'Registrar Nuevo Paciente' }}</h2>
-        <button type="button" class="btn-close" (click)="closeCreateModal()">
+        <h2 id="paciente-modal-title">{{ editingPacienteId() ? 'Editar Paciente' : 'Registrar Nuevo Paciente' }}</h2>
+        <button type="button" class="btn-close" aria-label="Cerrar formulario de paciente" (click)="closeCreateModal()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>
@@ -145,7 +145,7 @@
       <form [formGroup]="pacienteForm" (ngSubmit)="onSubmitPaciente()">
         <div class="modal-body">
           @if (formError()) {
-            <div class="form-error-banner">
+            <div class="form-error-banner" role="alert">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
               <span>{{ formError() }}</span>
             </div>
@@ -153,26 +153,26 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label>Documento de Identidad (DNI)</label>
-              <input type="text" formControlName="documentoIdentidad" placeholder="Ej. 12345678" maxlength="8">
+              <label for="paciente-documento">Documento de Identidad (DNI)</label>
+              <input id="paciente-documento" type="text" formControlName="documentoIdentidad" placeholder="Ej. 12345678" maxlength="8" [attr.aria-invalid]="pacienteForm.get('documentoIdentidad')?.invalid && pacienteForm.get('documentoIdentidad')?.touched ? 'true' : null" [attr.aria-describedby]="pacienteForm.get('documentoIdentidad')?.invalid && pacienteForm.get('documentoIdentidad')?.touched ? 'paciente-documento-error' : null">
               @if (pacienteForm.get('documentoIdentidad')?.invalid && (pacienteForm.get('documentoIdentidad')?.dirty || pacienteForm.get('documentoIdentidad')?.touched)) {
                 @if (pacienteForm.get('documentoIdentidad')?.hasError('required')) {
-                  <span class="error-text">El DNI es obligatorio</span>
+                  <span id="paciente-documento-error" class="error-text">El DNI es obligatorio</span>
                 } @else if (pacienteForm.get('documentoIdentidad')?.hasError('minlength') || pacienteForm.get('documentoIdentidad')?.hasError('maxlength')) {
-                  <span class="error-text">Debe tener exactamente 8 caracteres</span>
+                  <span id="paciente-documento-error" class="error-text">Debe tener exactamente 8 caracteres</span>
                 } @else if (pacienteForm.get('documentoIdentidad')?.hasError('pattern')) {
-                  <span class="error-text">Solo se permiten números</span>
+                  <span id="paciente-documento-error" class="error-text">Solo se permiten números</span>
                 }
               }
             </div>
             <div class="form-group">
-              <label>Fecha de Nacimiento</label>
-              <input type="date" formControlName="fechaNacimiento">
+              <label for="paciente-fecha">Fecha de Nacimiento</label>
+              <input id="paciente-fecha" type="date" formControlName="fechaNacimiento" [attr.aria-invalid]="pacienteForm.get('fechaNacimiento')?.invalid && pacienteForm.get('fechaNacimiento')?.touched ? 'true' : null" [attr.aria-describedby]="pacienteForm.get('fechaNacimiento')?.invalid && pacienteForm.get('fechaNacimiento')?.touched ? 'paciente-fecha-error' : null">
               @if (pacienteForm.get('fechaNacimiento')?.invalid && (pacienteForm.get('fechaNacimiento')?.dirty || pacienteForm.get('fechaNacimiento')?.touched)) {
                 @if (pacienteForm.get('fechaNacimiento')?.hasError('required')) {
-                  <span class="error-text">La fecha de nacimiento es obligatoria</span>
+                  <span id="paciente-fecha-error" class="error-text">La fecha de nacimiento es obligatoria</span>
                 } @else if (pacienteForm.get('fechaNacimiento')?.hasError('futureDate')) {
-                  <span class="error-text">La fecha no puede estar en el futuro</span>
+                  <span id="paciente-fecha-error" class="error-text">La fecha no puede estar en el futuro</span>
                 }
               }
             </div>
@@ -180,38 +180,38 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label>Nombre</label>
-              <input type="text" formControlName="nombre" placeholder="Ej. Juan">
+              <label for="paciente-nombre">Nombre</label>
+              <input id="paciente-nombre" type="text" formControlName="nombre" placeholder="Ej. Juan" [attr.aria-invalid]="pacienteForm.get('nombre')?.invalid && pacienteForm.get('nombre')?.touched ? 'true' : null" [attr.aria-describedby]="pacienteForm.get('nombre')?.invalid && pacienteForm.get('nombre')?.touched ? 'paciente-nombre-error' : null">
               @if (pacienteForm.get('nombre')?.invalid && (pacienteForm.get('nombre')?.dirty || pacienteForm.get('nombre')?.touched)) {
-                <span class="error-text">El nombre es obligatorio</span>
+                <span id="paciente-nombre-error" class="error-text">El nombre es obligatorio</span>
               }
             </div>
             <div class="form-group">
-              <label>Apellido</label>
-              <input type="text" formControlName="apellido" placeholder="Ej. Pérez">
+              <label for="paciente-apellido">Apellido</label>
+              <input id="paciente-apellido" type="text" formControlName="apellido" placeholder="Ej. Pérez" [attr.aria-invalid]="pacienteForm.get('apellido')?.invalid && pacienteForm.get('apellido')?.touched ? 'true' : null" [attr.aria-describedby]="pacienteForm.get('apellido')?.invalid && pacienteForm.get('apellido')?.touched ? 'paciente-apellido-error' : null">
               @if (pacienteForm.get('apellido')?.invalid && (pacienteForm.get('apellido')?.dirty || pacienteForm.get('apellido')?.touched)) {
-                <span class="error-text">El apellido es obligatorio</span>
+                <span id="paciente-apellido-error" class="error-text">El apellido es obligatorio</span>
               }
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label>Teléfono</label>
-              <input type="text" formControlName="telefono" placeholder="Ej. 987654321" maxlength="15">
+              <label for="paciente-telefono">Teléfono</label>
+              <input id="paciente-telefono" type="text" formControlName="telefono" placeholder="Ej. 987654321" maxlength="15" [attr.aria-invalid]="pacienteForm.get('telefono')?.invalid && pacienteForm.get('telefono')?.touched ? 'true' : null" [attr.aria-describedby]="pacienteForm.get('telefono')?.invalid && pacienteForm.get('telefono')?.touched ? 'paciente-telefono-error' : null">
               @if (pacienteForm.get('telefono')?.invalid && (pacienteForm.get('telefono')?.dirty || pacienteForm.get('telefono')?.touched)) {
                 @if (pacienteForm.get('telefono')?.hasError('required')) {
-                  <span class="error-text">El teléfono es obligatorio</span>
+                  <span id="paciente-telefono-error" class="error-text">El teléfono es obligatorio</span>
                 } @else if (pacienteForm.get('telefono')?.hasError('maxlength')) {
-                  <span class="error-text">Máximo 15 caracteres permitidos</span>
+                  <span id="paciente-telefono-error" class="error-text">Máximo 15 caracteres permitidos</span>
                 }
               }
             </div>
             <div class="form-group">
-              <label>Correo Electrónico</label>
-              <input type="email" formControlName="correo" placeholder="correo@ejemplo.com">
+              <label for="paciente-correo">Correo Electrónico</label>
+              <input id="paciente-correo" type="email" formControlName="correo" placeholder="correo@ejemplo.com" [attr.aria-invalid]="pacienteForm.get('correo')?.invalid && pacienteForm.get('correo')?.touched ? 'true' : null" [attr.aria-describedby]="pacienteForm.get('correo')?.invalid && pacienteForm.get('correo')?.touched ? 'paciente-correo-error' : null">
               @if (pacienteForm.get('correo')?.invalid && (pacienteForm.get('correo')?.dirty || pacienteForm.get('correo')?.touched)) {
-                <span class="error-text">Ingresa un correo válido</span>
+                <span id="paciente-correo-error" class="error-text">Ingresa un correo válido</span>
               }
             </div>
           </div>
@@ -234,7 +234,7 @@
 
 @if (showConfirmModal()) {
   <div class="modal-overlay" (click)="closeConfirmModal()">
-    <div class="modal-content confirm-modal" (click)="$event.stopPropagation()">
+    <div class="modal-content confirm-modal" role="dialog" aria-modal="true" aria-labelledby="paciente-confirm-title" (keydown)="trapModalFocus($event)" (click)="$event.stopPropagation()">
       <div class="confirm-icon" [ngClass]="confirmAction() === 'deshabilitar' ? 'danger' : 'success'">
         @if (confirmAction() === 'deshabilitar') {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
@@ -244,7 +244,7 @@
       </div>
       
       <div class="confirm-content">
-        <h3>{{ confirmAction() === 'deshabilitar' ? 'Deshabilitar Paciente' : 'Habilitar Paciente' }}</h3>
+        <h3 id="paciente-confirm-title">{{ confirmAction() === 'deshabilitar' ? 'Deshabilitar Paciente' : 'Habilitar Paciente' }}</h3>
         <p>¿Estás seguro que deseas {{ confirmAction() }} a <strong>{{ selectedPaciente()?.nombre }} {{ selectedPaciente()?.apellido }}</strong>?</p>
         @if (confirmAction() === 'deshabilitar') {
           <p class="confirm-warning">El paciente ya no aparecerá como activo en el sistema.</p>

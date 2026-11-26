@@ -69,6 +69,7 @@ export class LoginComponent {
       });
     } else {
       this.loginForm.markAllAsTouched();
+      this.errorMessage.set('Ingresa un correo válido y una contraseña de al menos 6 caracteres.');
     }
   }
 }

@@ -10,7 +10,7 @@
   align-items: center;
   gap: 8px;
   font-size: 14px;
-  color: #64748b;
+  color: #475569;
 }
 
 .breadcrumb svg {
@@ -40,6 +40,7 @@
 }
 
 .table-container {
+  overflow-x: auto;
   background: white;
   border-radius: 16px;
   padding: 24px;
@@ -549,4 +550,14 @@
 
 .btn-success:hover {
   background-color: #15803d;
+}
+
+@media (max-width: 640px) {
+  .page-header { gap: 12px; flex-wrap: wrap; }
+  .table-container { padding: 12px; }
+  .modal-overlay { padding: 8px; }
+  .modal-header, .modal-body, .modal-footer { padding: 14px; }
+  .form-row { grid-template-columns: minmax(0, 1fr); }
+  .modal-footer { flex-wrap: wrap; }
+  .breadcrumb { flex-wrap: wrap; }
 }

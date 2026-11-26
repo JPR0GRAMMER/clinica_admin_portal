@@ -8,7 +8,7 @@
     <span class="logo-text">Gestión <span class="logo-light">Clínica</span></span>
   </div>
   <div class="header-actions">
-    <button class="profile-btn" (click)="toggleProfileMenu($event)">
+    <button class="profile-btn" type="button" aria-label="Menú de perfil" aria-haspopup="menu" [attr.aria-expanded]="isProfileMenuOpen()" (click)="toggleProfileMenu($event)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
         <circle cx="12" cy="7" r="4"></circle>

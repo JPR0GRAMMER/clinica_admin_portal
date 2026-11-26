@@ -23,28 +23,29 @@
 
         <div class="top-selectors">
           <div class="form-group">
-            <label>Paciente</label>
+            <label id="paciente-label">Paciente</label>
             <div class="custom-select-container">
-              <div class="custom-select-trigger" 
+              <button type="button" class="custom-select-trigger" [attr.aria-controls]="isPacienteDropdownOpen() ? 'paciente-opciones' : null" [attr.aria-expanded]="isPacienteDropdownOpen()" [attr.aria-invalid]="citaForm.get('pacienteId')?.invalid && citaForm.get('pacienteId')?.touched ? 'true' : null"
                    (click)="togglePacienteDropdown()" 
                    [ngClass]="{'open': isPacienteDropdownOpen(), 'invalid': citaForm.get('pacienteId')?.invalid && citaForm.get('pacienteId')?.touched}">
-                <span>{{ getSelectedPacienteName() || 'Seleccione un paciente' }}</span>
+                <span><span class="sr-only">Paciente: </span>{{ getSelectedPacienteName() || 'Seleccione un paciente' }}</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="chevron"><polyline points="6 9 12 15 18 9"></polyline></svg>
-              </div>
+              </button>
               
               @if (isPacienteDropdownOpen()) {
                 <div class="custom-select-dropdown">
                   <div class="custom-select-search">
-                    <input type="text" placeholder="Buscar por nombre o DNI..." [value]="pacienteSearchQuery()" (input)="onSearchPaciente($event)" (click)="$event.stopPropagation()">
+                    <label for="paciente-busqueda" class="sr-only">Buscar paciente por nombre o DNI</label>
+                    <input id="paciente-busqueda" type="text" placeholder="Buscar por nombre o DNI..." [value]="pacienteSearchQuery()" (input)="onSearchPaciente($event)" (click)="$event.stopPropagation()">
                   </div>
-                  <div class="custom-select-options">
+                  <div id="paciente-opciones" class="custom-select-options">
                     @for (paciente of filteredPacientes(); track paciente.id) {
-                      <div class="custom-select-option" 
+                      <button type="button" class="custom-select-option"
                            [ngClass]="{'selected': citaForm.get('pacienteId')?.value === paciente.id}"
                            (click)="selectPaciente(paciente.id)">
                         <span>{{ paciente.nombre }} {{ paciente.apellido }}</span>
                         <span class="text-muted">DNI: {{ paciente.documentoIdentidad }}</span>
-                      </div>
+                      </button>
                     }
                     @if (filteredPacientes().length === 0) {
                       <div class="custom-select-empty">No se encontraron pacientes</div>
@@ -56,8 +57,8 @@
           </div>
           
           <div class="form-group">
-            <label>Especialidad Requerida</label>
-            <select formControlName="especialidadId">
+            <label for="cita-especialidad">Especialidad Requerida</label>
+            <select id="cita-especialidad" formControlName="especialidadId" [attr.aria-invalid]="citaForm.get('especialidadId')?.invalid && citaForm.get('especialidadId')?.touched ? 'true' : null">
               <option [ngValue]="null" disabled>Seleccione la especialidad</option>
               @for (esp of especialidades(); track esp.id) {
                 <option [ngValue]="esp.id">{{ esp.nombre }}</option>
@@ -66,8 +67,8 @@
           </div>
 
           <div class="form-group">
-            <label>Fecha de la Cita</label>
-            <input type="date" formControlName="fechaCita" [min]="minDate()">
+            <label for="cita-fecha">Fecha de la Cita</label>
+            <input id="cita-fecha" type="date" formControlName="fechaCita" [min]="minDate()" [attr.aria-invalid]="citaForm.get('fechaCita')?.invalid && citaForm.get('fechaCita')?.touched ? 'true' : null">
           </div>
         </div>
 
@@ -97,7 +98,7 @@
                                   class="time-slot"
                                   [ngClass]="{'occupied': bloque.ocupado, 'selected': citaForm.get('medicoId')?.value === doctor.medicoId && citaForm.get('horaCita')?.value === bloque.hora}"
                                   (click)="selectSlot(doctor.medicoId, bloque.hora, bloque.ocupado)"
-                                  [title]="bloque.ocupado ? 'Horario ocupado por otro paciente' : 'Seleccionar este horario'">
+                                  [disabled]="bloque.ocupado" [attr.aria-pressed]="citaForm.get('medicoId')?.value === doctor.medicoId && citaForm.get('horaCita')?.value === bloque.hora" [attr.aria-label]="(bloque.ocupado ? 'Horario ocupado ' : 'Seleccionar horario ') + bloque.hora + ' con ' + doctor.medicoNombre">
                             {{ bloque.hora }}
                           </button>
                         }
@@ -121,7 +122,7 @@
         }
 
         @if (formError()) {
-          <div class="error-banner" style="margin-top: 32px; margin-bottom: 0;">
+          <div class="error-banner" role="alert" style="margin-top: 32px; margin-bottom: 0;">
             {{ formError() }}
           </div>
         }
